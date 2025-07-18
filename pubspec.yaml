@@ -39,8 +39,7 @@ dependencies:
   google_generative_ai: ^0.4.3
   shared_preferences: ^2.2.2
   table_calendar: ^3.0.9
-  speech_to_text: ^6.6.0
-  permission_handler: ^11.1.0
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +51,61 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.6
+
+# Flutter Launcher Icons Configuration
+# Tạo app icons cho tất cả platforms từ AI_Accounting.jpg
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/AI_Accounting.jpg"
+  min_sdk_android: 21
+  
+  # Android Adaptive Icon (recommended)
+  adaptive_icon_background: "#2196F3" # Nền xanh brand
+  adaptive_icon_foreground: "assets/images/AI_Accounting.jpg"
+  
+  # Legacy icon fallback cho old Android versions
+  android_legacy: true
+  
+  # Web PWA configuration  
+  web:
+    generate: true
+    image_path: "assets/images/AI_Accounting.jpg"
+    background_color: "#2196F3"
+    theme_color: "#2196F3"
+    
+  # Desktop platforms
+  windows:
+    generate: true
+    image_path: "assets/images/AI_Accounting.jpg"
+  macos:
+    generate: true
+    image_path: "assets/images/AI_Accounting.jpg"
+
+# Flutter Native Splash Configuration  
+# Tạo splash screen full màn hình từ Banner_AI.png
+flutter_native_splash:
+  # Sử dụng background_image để stretch image full màn hình
+  background_image: "assets/images/Banner_AI.png"
+  background_image_dark: "assets/images/Banner_AI.png"
+  
+  # Platform support
+  android: true
+  ios: true 
+  web: true
+  
+  # Fullscreen mode (ẩn status bar)
+  fullscreen: true
+  
+  # Android 12+ splash screen configuration - SỬ DỤNG BANNER THAY VÌ ICON
+  android_12:
+    # Background color
+    color: "#2196F3"
+    # SỬ DỤNG BANNER_AI.PNG CHO ANDROID 12+ THAY VÌ LAUNCHER ICON
+    image: "assets/images/Banner_AI.png"
+    icon_background_color: "#2196F3"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -64,9 +118,13 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Assets
+  assets:
+    - assets/images/
+
   # To add assets to your application, add an assets section, like this:
   # assets:
-  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_burr.jpeg 
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

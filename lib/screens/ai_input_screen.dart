@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../models/finance_record.dart';
 import '../models/chat_message.dart';
 import '../services/ai_service.dart';
@@ -29,15 +27,10 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final AIService _aiService = AIService();
-  final SpeechToText _speechToText = SpeechToText();
   List<ChatMessage> _messages = [];
   bool _isLoading = false;
   bool _isLoadingHistory = true;
   bool _isTyping = false;
-  bool _isListening = false;
-  bool _speechEnabled = false;
-  String _wordsSpoken = "";
-  double _confidenceLevel = 0;
   late AnimationController _typingAnimationController;
   late AnimationController _voiceAnimationController;
 
@@ -53,7 +46,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _initSpeech();
+    // Voice feature will be implemented in future updates
     _loadChatHistory();
   }
 
@@ -66,92 +59,80 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     super.dispose();
   }
 
-  Future<void> _initSpeech() async {
-    try {
-      // Kiểm tra và yêu cầu quyền microphone
-      final status = await Permission.microphone.request();
-      if (status != PermissionStatus.granted) {
-        print('Microphone permission denied');
-        return;
-      }
-
-      _speechEnabled = await _speechToText.initialize(
-        onStatus: (status) {
-          print('Speech status: $status');
-          if (status == 'done' || status == 'notListening') {
-            setState(() {
-              _isListening = false;
-            });
-            _voiceAnimationController.stop();
-          }
-        },
-        onError: (error) {
-          print('Speech error: $error');
-          setState(() {
-            _isListening = false;
-          });
-          _voiceAnimationController.stop();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Lỗi nhận diện giọng nói: ${error.errorMsg}'),
-                backgroundColor: AppColors.errorColor,
+  void _showVoiceComingSoonDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.infoColor.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-            );
-          }
-        },
-      );
-      setState(() {});
-    } catch (e) {
-      print('Error initializing speech: $e');
-      setState(() {
-        _speechEnabled = false;
-      });
-    }
-  }
-
-  Future<void> _startListening() async {
-    if (!_speechEnabled) {
-      await _initSpeech();
-      if (!_speechEnabled) return;
-    }
-
-    setState(() {
-      _isListening = true;
-      _wordsSpoken = "";
-      _confidenceLevel = 0;
-    });
-
-    _voiceAnimationController.repeat();
-
-    await _speechToText.listen(
-      onResult: (result) {
-        setState(() {
-          _wordsSpoken = result.recognizedWords;
-          _confidenceLevel = result.confidence;
-        });
-        
-        // Cập nhật text field với từ đã nhận diện
-        _messageController.text = _wordsSpoken;
-        _messageController.selection = TextSelection.fromPosition(
-          TextPosition(offset: _messageController.text.length),
-        );
-      },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 3),
-      partialResults: true,
-      localeId: 'vi_VN', // Tiếng Việt
-      cancelOnError: true,
-      listenMode: ListenMode.confirmation,
+              child: const Icon(
+                Icons.mic,
+                color: AppColors.infoColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Text('Tính năng giọng nói'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '🎤 Tính năng nhập liệu bằng giọng nói đang được phát triển',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: AppStyles.spacingM),
+            Text(
+              'Tính năng này sẽ cho phép bạn:',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            SizedBox(height: AppStyles.spacingS),
+            Text(
+              '• Nói thay vì gõ tin nhắn\n'
+              '• Nhận diện giọng nói tiếng Việt\n'
+              '• Chuyển đổi giọng nói thành text\n'
+              '• Tương tác nhanh hơn với AI',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: AppStyles.spacingM),
+            Text(
+              '⏰ Sẽ có trong bản cập nhật tiếp theo!',
+              style: TextStyle(
+                color: AppColors.successColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.infoColor,
+              foregroundColor: AppColors.textOnMain,
+            ),
+            child: const Text('Đã hiểu'),
+          ), 
+        ],
+      ),
     );
-  }
-
-  Future<void> _stopListening() async {
-    await _speechToText.stop();
-    setState(() {
-      _isListening = false;
-    });
-    _voiceAnimationController.stop();
   }
 
   Future<void> _loadChatHistory() async {
@@ -771,66 +752,68 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   }
 
   Widget _buildVoiceButton() {
-    return AnimatedBuilder(
-      animation: _voiceAnimationController,
-      builder: (context, child) {
-        return Container(
-          margin: const EdgeInsets.only(right: AppStyles.spacingS),
-          child: GestureDetector(
-            onTap: _isListening ? _stopListening : _startListening,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                gradient: _isListening 
-                    ? LinearGradient(
-                        colors: [
-                          AppColors.errorColor,
-                          AppColors.errorColor.withOpacity(0.8),
-                        ],
-                      )
-                    : AppColors.mainGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isListening ? AppColors.errorColor : AppColors.mainColor)
-                        .withOpacity(0.3),
-                    blurRadius: _isListening ? 12 + (_voiceAnimationController.value * 8) : 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (_isListening) ...[
-                    // Pulse animation rings
-                    for (int i = 0; i < 3; i++)
-                      Container(
-                        width: 48 + (i * 10) + (_voiceAnimationController.value * 20),
-                        height: 48 + (i * 10) + (_voiceAnimationController.value * 20),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.errorColor.withOpacity(
-                              (1 - _voiceAnimationController.value) * 0.3 / (i + 1)
-                            ),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                  ],
-                  Icon(
-                    _isListening ? Icons.mic : Icons.mic_none,
-                    color: AppColors.textOnMain,
-                    size: 24,
-                  ),
-                ],
-              ),
+    return Container(
+      margin: const EdgeInsets.only(right: AppStyles.spacingS),
+      child: GestureDetector(
+        onTap: _showVoiceComingSoonDialog,
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.infoColor,
+                AppColors.infoColor.withOpacity(0.8),
+              ],
             ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.infoColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        );
-      },
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(
+                Icons.mic,
+                color: AppColors.textOnMain,
+                size: 24,
+              ),
+              // "Coming soon" indicator
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppColors.warningColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.textOnMain,
+                      width: 1,
+                    ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '!',
+                      style: TextStyle(
+                        color: AppColors.textOnMain,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -973,49 +956,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                 ],
               ),
             ),
-          // Voice listening indicator
-          if (_isListening)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppStyles.spacingM,
-                vertical: AppStyles.spacingS,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.errorColor.withOpacity(0.1),
-                border: const Border(
-                  top: BorderSide(color: AppColors.borderLight),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: AppColors.errorColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: AppStyles.spacingS),
-                  const Text(
-                    'Đang nghe...',
-                    style: TextStyle(
-                      color: AppColors.errorColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_confidenceLevel > 0)
-                    Text(
-                      'Độ tin cậy: ${(_confidenceLevel * 100).toInt()}%',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                ],
-              ),
-            ),
+          // Voice feature placeholder - will be implemented in future updates
           Container(
             padding: const EdgeInsets.all(AppStyles.spacingM),
             decoration: const BoxDecoration(
@@ -1026,10 +967,10 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    if (_speechEnabled) _buildVoiceButton(),
-                    Expanded(
+                                  Row(
+                    children: [
+                      // _buildVoiceButton(),
+                      Expanded(
                       child: TextField(
                         controller: _messageController,
                         enabled: !_isLoading,
@@ -1037,26 +978,20 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _sendMessage(),
                         decoration: InputDecoration(
-                          hintText: _isListening 
-                              ? 'Đang nghe giọng nói...' 
-                              : 'Nhập tin nhắn hoặc dùng giọng nói...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                            borderSide: BorderSide(
-                              color: _isListening 
-                                  ? AppColors.errorColor 
-                                  : AppColors.borderLight,
+                          hintText: 'Nhập tin nhắn ...',
+                                                      border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                              borderSide: const BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                            borderSide: BorderSide(
-                              color: _isListening 
-                                  ? AppColors.errorColor 
-                                  : AppColors.mainColor, 
-                              width: 2,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                              borderSide: const BorderSide(
+                                color: AppColors.mainColor, 
+                                width: 2,
+                              ),
                             ),
-                          ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppStyles.spacingM,
                             vertical: AppStyles.spacingS,
@@ -1073,32 +1008,11 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                       child: IconButton(
                         icon: const Icon(Icons.send),
                         color: AppColors.textOnMain,
-                        onPressed: (_isLoading || _isListening) ? null : _sendMessage,
+                                                  onPressed: _isLoading ? null : _sendMessage,
                       ),
                     ),
                   ],
                 ),
-                if (!_speechEnabled && _speechToText.isNotListening)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppStyles.spacingS),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: AppStyles.spacingXS),
-                        Text(
-                          'Chức năng giọng nói chưa sẵn sàng',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),

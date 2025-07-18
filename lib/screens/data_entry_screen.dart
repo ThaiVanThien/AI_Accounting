@@ -412,7 +412,7 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
                 // Header Card
                 Container(
                   decoration: AppStyles.cardDecoration,
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: const EdgeInsets.all(AppStyles.spacingM),
                   margin: const EdgeInsets.only(bottom: AppStyles.spacingL),
                   child: Column(
                     children: [
@@ -450,7 +450,7 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
                           labelText: 'Doanh Thu (VNĐ)',
                           prefixIcon: Container(
                             margin: const EdgeInsets.all(AppStyles.spacingS),
-                            padding: const EdgeInsets.all(AppStyles.spacingS),
+                            padding: const EdgeInsets.all(AppStyles.spacingM),
                             decoration: BoxDecoration(
                               color: AppColors.success.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(AppStyles.radiusS),
@@ -493,7 +493,7 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
                           labelText: 'Chi Phí (VNĐ)',
                           prefixIcon: Container(
                             margin: const EdgeInsets.all(AppStyles.spacingS),
-                            padding: const EdgeInsets.all(AppStyles.spacingS),
+                            padding: const EdgeInsets.all(AppStyles.spacingM),
                             decoration: BoxDecoration(
                               color: AppColors.error.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(AppStyles.radiusS),
@@ -506,10 +506,8 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
                           ),
                           hintText: 'Ví dụ: 500,000',
                           suffixText: 'VNĐ',
-                          suffixStyle: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          suffixStyle:
+                            AppStyles.bodyLarge,
                         ),
                         keyboardType: TextInputType.number,
                         style: AppStyles.bodyLarge,
@@ -601,15 +599,15 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
                                 backgroundColor: AppColors.primaryBlue,
                                 foregroundColor: AppColors.textOnPrimary,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: AppStyles.spacingM,
-                                  vertical: AppStyles.spacingS,
+                                  horizontal: AppStyles.spacingXS,
+                                  vertical: AppStyles.spacingXS,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(AppStyles.radiusM),
                                 ),
                               ),
                               icon: const Icon(Icons.calendar_month, size: 18),
-                              label: const Text('Chọn ngày'),
+                              label: Text('Chọn ngày',style: TextStyle(fontSize: 12),),
                             ),
                           ],
                         ),

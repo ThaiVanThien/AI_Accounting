@@ -49,15 +49,15 @@ class AIService {
   String _getWritePromptText(String userInput) {
     final now = DateTime.now();
     return '''Bạn là AI chuyên xử lý dữ liệu tài chính Việt Nam.
-Thời gian hiện tại: ${now.toString().split(' ')[0]}
-Context: Người dùng sẽ nói về doanh thu và chi phí trong ngày. Nếu tiền nợ sẽ tính vào tiền chi phí
-Task: Trích xuất chính xác số tiền và chuyển đổi thành JSON.
-Examples: Input: 'Hôm nay bán được 500k, mua hàng hết 300k' 
-Output: {"doanh_thu": 500000, "chi_phi": 300000,"ghi_chu": "Lấy thông tin từ input có thể để trống", "ngay_tao": "2024-01-15"} 
-Input: "Thu về 2 triệu 5, chi tiêu 1 triệu 2"
-Output: {"doanh_thu": 2500000, "chi_phi": 1200000,"ghi_chu": "Lấy thông tin từ input có thể để trống", "ngay_tao": "2024-01-15"} Response (JSON only) không có Json data:
-Nếu dữ liệu không liên quan thì trả về 'Error'
-Hãy phân tích dữ liệu sau: $userInput''';
+    Thời gian hiện tại: ${now.toString().split(' ')[0]}
+    Context: Người dùng sẽ nói về doanh thu và chi phí trong ngày. Nếu tiền nợ sẽ tính vào tiền chi phí
+    Task: Trích xuất chính xác số tiền và chuyển đổi thành JSON.
+    Examples: Input: 'Hôm nay bán được 500k, mua hàng hết 300k' 
+    Output: {"doanh_thu": 500000, "chi_phi": 300000,"ghi_chu": "", "ngay_tao": "2024-01-15"} //Ghi chú: Nếu dữ liệu không liên quan thì trả về ""
+    Input: "Thu về 2 triệu 5, chi tiêu 1 triệu 2"
+    Output: {"doanh_thu": 2500000, "chi_phi": 1200000,"ghi_chu": "", "ngay_tao": "2024-01-15"} Response (JSON only) không có Json data:  //Ghi chú: Nếu dữ liệu không liên quan thì trả về ""
+    Nếu dữ liệu không liên quan thì trả về 'Error'
+    Hãy phân tích dữ liệu sau: $userInput''';
   }
 
   String _cleanJsonText(String text) {

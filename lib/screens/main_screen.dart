@@ -235,14 +235,14 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
           ),
-          child: const Center(
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(
+                const CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
                 ),
-                SizedBox(height: AppStyles.spacingL),
+                const SizedBox(height: AppStyles.spacingL),
                 Text(
                   'Đang tải dữ liệu...',
                   style: AppStyles.bodyLarge,

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'screens/main_screen.dart';
 import 'constants/app_colors.dart';
 import 'constants/app_styles.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Preserve native splash screen during app initialization
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   // Initialize locale data
   try {
@@ -20,7 +24,25 @@ void main() async {
     }
   }
   
+  // Add any other initialization here (database, services, etc.)
+  await _initializeApp();
+  
   runApp(const KeToAnApp());
+}
+
+// App initialization function
+Future<void> _initializeApp() async {
+  // Simulate app initialization (replace with actual initialization)
+  await Future.delayed(const Duration(seconds: 2));
+  
+  // You can add actual initialization here:
+  // - Database setup
+  // - API connections
+  // - User preferences loading
+  // - etc.
+  
+  // Remove splash screen when initialization is complete
+  FlutterNativeSplash.remove();
 }
 
 class KeToAnApp extends StatelessWidget {
@@ -33,6 +55,8 @@ class KeToAnApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         primaryColor: AppColors.mainColor,
+        fontFamily: GoogleFonts.montserrat().fontFamily,
+        textTheme: GoogleFonts.montserratTextTheme(),
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.mainColor,
           primary: AppColors.mainColor,

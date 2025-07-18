@@ -1,45 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppStyles {
-  // Text Styles
-  static const TextStyle headingLarge = TextStyle(
+  // Text Styles with Montserrat
+  static TextStyle headingLarge = GoogleFonts.montserrat(
     fontSize: 28,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
   );
   
-  static const TextStyle headingMedium = TextStyle(
+  static TextStyle headingMedium = GoogleFonts.montserrat(
     fontSize: 22,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
   );
   
-  static const TextStyle headingSmall = TextStyle(
+  static TextStyle headingSmall = GoogleFonts.montserrat(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
   
-  static const TextStyle bodyLarge = TextStyle(
+  static TextStyle bodyLarge = GoogleFonts.montserrat(
     fontSize: 16,
     fontWeight: FontWeight.normal,
     color: AppColors.textPrimary,
   );
   
-  static const TextStyle bodyMedium = TextStyle(
+  static TextStyle bodyMedium = GoogleFonts.montserrat(
     fontSize: 14,
     fontWeight: FontWeight.normal,
     color: AppColors.textSecondary,
   );
   
-  static const TextStyle bodySmall = TextStyle(
+  static TextStyle bodySmall = GoogleFonts.montserrat(
     fontSize: 12,
     fontWeight: FontWeight.normal,
     color: AppColors.textHint,
   );
   
-  static const TextStyle buttonText = TextStyle(
+  static TextStyle buttonText = GoogleFonts.montserrat(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.textOnMain,
@@ -75,6 +76,10 @@ class AppStyles {
     backgroundColor: AppColors.mainColor,
     foregroundColor: AppColors.textOnMain,
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    textStyle: GoogleFonts.montserrat(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+    ),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
     ),
@@ -85,6 +90,10 @@ class AppStyles {
     backgroundColor: AppColors.backgroundSecondary,
     foregroundColor: AppColors.mainColor,
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    textStyle: GoogleFonts.montserrat(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+    ),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
       side: const BorderSide(color: AppColors.mainColor),
@@ -112,12 +121,12 @@ class AppStyles {
   );
   
   // AppBar Style
-  static const AppBarTheme appBarTheme = AppBarTheme(
+  static AppBarTheme appBarTheme = AppBarTheme(
     backgroundColor: AppColors.mainColor,
     foregroundColor: AppColors.textOnMain,
     elevation: 0,
     centerTitle: true,
-    titleTextStyle: TextStyle(
+    titleTextStyle: GoogleFonts.montserrat(
       fontSize: 20,
       fontWeight: FontWeight.w600,
       color: AppColors.textOnMain,
