@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'screens/app_router.dart';
+import 'screens/business_setup_screen.dart';
 import 'screens/main_screen.dart';
 import 'constants/app_colors.dart';
 import 'constants/app_styles.dart';
@@ -51,6 +53,7 @@ class KeToAnApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Kế Toán AI',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -96,7 +99,11 @@ class KeToAnApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      home: const AppRouter(),
+      routes: {
+        '/setup': (context) => const BusinessSetupScreen(),
+        '/main': (context) => const MainScreen(),
+      },
     );
   }
 }

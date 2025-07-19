@@ -239,7 +239,7 @@ ${totalRevenue > 0 ? '📋 Tỷ lệ lợi nhuận: ${(totalProfit / totalRevenu
       } else {
         // Xử lý câu hỏi chung
         messageType = "search";
-        final generalResponse = await callGeminiAPI("$userMessage Giải thích ngắn gọn về kế toán và tài chính");
+        final generalResponse = await callGeminiAPI("$userMessage **Tóm tắt, ngắn gọn, dễ hiểu, Loại bỏ tất cả các dấu ký tự đặc biệt chỉ sử dụng gạch đầu dòng (dấu '-')");
         aiResponse = generalResponse;
         metadata = {"query": userMessage};
       }

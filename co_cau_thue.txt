@@ -1,0 +1,166 @@
+CƠ CẤU THUẾ CHO HỘ KINH DOANH NHỎ LẺ & TIỂU THƯƠNG - HIỆN TẠI THÁNG 7/2025
+
+================================================================================
+I. QUY ĐỊNH THUẾ ĐANG ÁP DỤNG HIỆN TẠI (THÁNG 7/2025)
+================================================================================
+
+📌 **NHỮNG THAY ĐỔI QUAN TRỌNG TỪ 1/7/2025:**
+
+✅ Luật VAT 2024 có hiệu lực (Nghị định 181/2025/NĐ-CP)
+✅ Nghị định 117/2025/NĐ-CP về quản lý thuế sàn TMĐT có hiệu lực
+✅ Sử dụng số định danh cá nhân thay mã số thuế
+✅ VAT giảm còn 8% theo Nghị quyết 204/2025/QH15 (đến 31/12/2026)
+✅ Chuẩn bị tăng ngưỡng miễn thuế VAT lên 200 triệu đồng/năm từ 1/1/2026
+
+================================================================================
+II. PHÂN LOẠI HỘ KINH DOANH HIỆN TẠI
+================================================================================
+
+🏪 **HỘ THUẾ KHOÁN** (Vẫn áp dụng đến 31/12/2025)
+• Hộ có doanh thu dưới ngưỡng chịu thuế: MIỄN THUẾ
+• Hộ thuộc diện khoán: Nộp theo mức khoán do cơ quan thuế ấn định
+
+🏪 **HỘ KÊ KHAI** 
+• Hộ chuyển đổi từ khoán sang kê khai
+• Hộ có doanh thu từ 1 tỷ đồng/năm bắt buộc dùng hóa đơn điện tử từ 1/6/2025
+
+================================================================================
+III. CÁC LOẠI THUẾ HỘ KINH DOANH PHẢI NỘP HIỆN TẠI
+================================================================================
+
+💰 **1. THUẾ GIÁ TRỊ GIA TĂNG (VAT/GTGT)**
+
+▪️ **MIỄN THUẾ:** Doanh thu < 100 triệu đồng/năm (tăng lên 200 triệu từ 1/1/2026)
+
+▪️ **THUẾ SUẤT 8%** (Giảm từ 10% đến 31/12/2026):
+   - Hầu hết hàng hóa, dịch vụ thông thường
+   - TRỪ: Viễn thông, tài chính, ngân hàng, bất động sản, sản phẩm chịu thuế tiêu thụ đặc biệt
+
+▪️ **THUẾ SUẤT 5%:**
+   - Nước sạch sinh hoạt
+   - Phân bón (từ 1/7/2025)
+   - Sản phẩm nông sản chưa chế biến
+
+▪️ **THUẾ SUẤT 0%:**
+   - Hàng hóa xuất khẩu
+   - Hàng bán tại cửa hàng miễn thuế
+
+💰 **2. THUẾ THU NHẬP CÁ NHÂN (TNCN)**
+
+▪️ **Tỷ lệ % trên doanh thu theo ngành nghề:**
+
+**NÔNG NGHIỆP, RỪNG TRỒNG:**
+• Trồng trọt, chăn nuôi: 0,5%
+• Thủy sản nuôi trồng: 0,5%
+
+**SẢN XUẤT, CHẾ BIẾN:**
+• Sản xuất, chế biến: 1,5%
+• Xây dựng: 2%
+
+**THƯƠNG MẠI:**
+• Mua bán hàng hóa: 0,5%
+• Đại lý, môi giới: 1%
+
+**DỊCH VỤ:**
+• Vận tải: 1,5%
+• Ăn uống: 1,5%
+• Lưu trú (khách sạn, nhà nghỉ): 2%
+• Karaoke, massage: 4%
+• Cho thuê tài sản: 5%
+
+💰 **3. THUẾ MÔN BÀI** (Vẫn áp dụng năm 2025)
+
+▪️ **Mức nộp theo doanh thu hàng năm:**
+• Dưới 100 triệu: MIỄN
+• 100-300 triệu: 300.000 đồng/năm
+• 300-500 triệu: 500.000 đồng/năm  
+• Trên 500 triệu: 1.000.000 đồng/năm
+
+================================================================================
+IV. QUY ĐỊNH ĐẶC BIỆT VỀ HÓA ĐƠN ĐIỆN TỬ (TỪ 1/6/2025)
+================================================================================
+
+📱 **BẮT BUỘC SỬ DỤNG HÓA ĐƠN ĐIỆN TỬ:**
+
+▪️ **Từ 1/6/2025:** Hộ thuế khoán có doanh thu từ 1 tỷ đồng/năm
+▪️ **Từ 1/1/2027:** Hộ có doanh thu từ 800 triệu đồng/năm
+▪️ **Từ 1/1/2028:** Tất cả hộ thuộc diện chịu thuế VAT
+
+📱 **YÊU CẦU KỸ THUẬT:**
+• Hóa đơn điện tử kết nối máy tính tiền
+• Truyền dữ liệu trực tiếp về cơ quan thuế
+• Áp dụng cho: nhà hàng, khách sạn, siêu thị, bán lẻ
+
+================================================================================
+V. THƯƠNG MẠI ĐIỆN TỬ (TỪ 1/7/2025)
+================================================================================
+
+🛒 **SÀN CÓ CHỨC NĂNG THANH TOÁN** (Shopee, Lazada, Tiki):
+• Sàn tự động khấu trừ thuế cho hộ bán hàng
+• Hộ không phải tự kê khai thuế
+
+🛒 **SÀN KHÔNG CÓ CHỨC NĂNG THANH TOÁN** (Facebook, Zalo):
+• Hộ phải TỰ kê khai và nộp thuế
+• Thuế suất: 0,5% - 5% tùy loại hàng hóa/dịch vụ
+
+================================================================================
+VI. THỦ TỤC KÊ KHAI VÀ NỘP THUẾ
+================================================================================
+
+📋 **HỘ THUẾ KHOÁN:**
+• Cơ quan thuế ấn định mức thuế cố định
+• Nộp thuế theo thông báo của cơ quan thuế
+• Không cần kê khai chi tiết doanh thu
+
+📋 **HỘ KÊ KHAI:**
+• Kê khai theo tháng: Trước ngày 20 tháng sau
+• Kê khai theo quý: Trước ngày cuối tháng đầu quý sau
+• Sử dụng tờ khai mẫu 01/CNKD
+• Nộp thuế điện tử qua eTax Mobile hoặc cổng thuế điện tử
+
+📋 **CHUYỂN ĐỔI TỪ KHOÁN SANG KÊ KHAI:**
+• Thông báo với cơ quan thuế trước ngày 10 kể từ ngày chuyển đổi
+• Điều chỉnh giảm thuế khoán cho thời gian chuyển đổi
+
+================================================================================
+VII. LƯU Ý QUAN TRỌNG
+================================================================================
+
+⚠️ **CHUẨN BỊ CHO THAY ĐỔI TỪ 2026:**
+• Thuế khoán sẽ bị bỏ từ 1/1/2026
+• Tất cả hộ sẽ chuyển sang kê khai theo doanh thu thực tế
+• Phân chia thành 4 nhóm theo doanh thu
+
+⚠️ **SỬ DỤNG SỐ ĐỊNH DANH CÁ NHÂN:**
+• Từ 1/7/2025 dùng số định danh thay mã số thuế
+• Thủ tục hành chính đơn giản hơn
+
+⚠️ **ĐỊNH DANH ĐIỆN TỬ:**
+• Doanh nghiệp phải đăng ký tài khoản định danh điện tử
+• Tài khoản DVC quốc gia cũ sẽ hết hiệu lực từ 1/7/2025
+
+⚠️ **NGƯỠNG MIỄN THUẾ HIỆN TẠI & TƯƠNG LAI:**
+• VAT: 100 triệu đồng/năm (đến 31/12/2025) → 200 triệu đồng/năm (từ 1/1/2026)
+• TNCN: Áp dụng khi có doanh thu từ 100 triệu đồng/năm
+
+================================================================================
+VIII. LIÊN HỆ VÀ HỖ TRỢ
+================================================================================
+
+📞 **HOTLINE HỖ TRỢ:**
+• Tổng đài: 0101 (24/7)
+• Website: https://thuedientu.gdt.gov.vn
+
+📞 **ỨNG DỤNG MOBILE:**
+• eTax Mobile: Kê khai, nộp thuế
+• VNEID: Định danh điện tử
+
+📞 **HỖ TRỢ TẠI ĐỊA PHƯƠNG:**
+• Chi cục thuế khu vực
+• UBND cấp xã (đăng ký hộ kinh doanh)
+
+================================================================================
+
+🔹 **LƯU Ý:** Thông tin được cập nhật đến tháng 7/2025. 
+🔹 **Nguồn:** Nghị định 181/2025, 117/2025, Nghị quyết 204/2025, Thông tư 40/2021
+🔹 **Cập nhật:** Theo dõi website Cục Thuế để có thông tin mới nhất
