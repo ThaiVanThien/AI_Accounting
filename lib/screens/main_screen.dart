@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:ketoan_ai/screens/product_list_screen.dart';
 import '../models/finance_record.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../services/storage_manager.dart';
-import 'data_entry_screen.dart';
+import '../services/shop_service.dart';
+import 'order_form_screen.dart';
 import 'ai_input_screen.dart';
 import 'report_screen.dart';
-import 'record_list_screen.dart';
+
+import 'order_list_screen.dart';
+import 'login_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,6 +26,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _isLoading = true;
   
   final StorageManager _storageManager = StorageManager();
+  final ShopService _shopService = ShopService();
   final List<Widget> _screens = [];
 
   @override
@@ -57,10 +62,10 @@ class _MainScreenState extends State<MainScreen> {
       // Khởi tạo screens sau khi load data
       _initializeScreens();
     } catch (e) {
-      print('Error loading data: $e');
+      debugPrint('Error loading data: $e');
       setState(() {
         _isLoading = false;
-      });
+      }); 
       _initializeScreens();
     }
   }
@@ -68,19 +73,23 @@ class _MainScreenState extends State<MainScreen> {
   void _initializeScreens() {
     _screens.clear();
     _screens.addAll([
-      DataEntryScreen(
-        onAddRecord: _addRecord,
+      OrderFormScreen(
+        // onOrderCreated: (order) {
+        //   // Có thể thêm logic xử lý khi tạo đơn hàng thành công
+        //   // ScaffoldMessenger.of(context).showSnackBar(
+        //   //   SnackBar(
+        //   //     content: Text('✅ Đã tạo đơn hàng: ${order.orderNumber}'),
+        //   //     backgroundColor: AppColors.successColor,
+        //   //   ),
+        //   // );
+        // },
       ),
       AIInputScreen(
         onAddRecord: _addRecord,
         records: _records,
       ),
       ReportScreen(records: _records),
-      RecordListScreen(
-        records: _records,
-        onDeleteRecord: _deleteRecord,
-        onUpdateRecord: _updateRecord,
-      ),
+      ProductListScreen(),
     ]);
   }
 
@@ -112,7 +121,7 @@ class _MainScreenState extends State<MainScreen> {
       _initializeScreens();
       
     } catch (e) {
-      print('Error adding record: $e');
+      debugPrint('Error adding record: $e');
       // Rollback nếu có lỗi
       setState(() {
         if (_records.isNotEmpty) _records.removeLast();
@@ -170,7 +179,7 @@ class _MainScreenState extends State<MainScreen> {
         );
       }
     } catch (e) {
-      print('Error deleting record: $e');
+      debugPrint('Error deleting record: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -208,13 +217,125 @@ class _MainScreenState extends State<MainScreen> {
       _initializeScreens();
       
     } catch (e) {
-      print('Error updating record: $e');
+      debugPrint('Error updating record: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Lỗi khi cập nhật dữ liệu: $e'),
             backgroundColor: AppColors.errorColor,
           ),
+        );
+      }
+    }
+  }
+
+  String _getScreenTitle() {
+    switch (_currentIndex) {
+      case 0:
+        return 'Tạo đơn hàng';
+      case 1:
+        return 'AI Chat';
+      case 2:
+        return 'Báo cáo tài chính';
+      case 3:
+        return 'Quản lý sản phẩm';
+      default:
+        return 'AI Accounting';
+    }
+  }
+
+  void _showShopInfo() async {
+    final shopInfo = await _shopService.getShopInfo();
+    if (shopInfo != null && mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.store, color: AppColors.mainColor),
+              SizedBox(width: AppStyles.spacingS),
+              Text('Thông tin cửa hàng'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow('Tên cửa hàng:', shopInfo.name),
+                _buildInfoRow('Địa chỉ:', shopInfo.address),
+                _buildInfoRow('Số điện thoại:', shopInfo.phone),
+                if (shopInfo.email.isNotEmpty)
+                  _buildInfoRow('Email:', shopInfo.email),
+                _buildInfoRow('Loại hình KD:', shopInfo.businessType),
+                if (shopInfo.ownerName.isNotEmpty)
+                  _buildInfoRow('Chủ cửa hàng:', shopInfo.ownerName),
+                if (shopInfo.taxCode.isNotEmpty)
+                  _buildInfoRow('Mã số thuế:', shopInfo.taxCode),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất khỏi ứng dụng?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.errorColor,
+            ),
+            child: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _shopService.logout();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
         );
       }
     }
@@ -266,7 +387,91 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
         ),
-        child: _screens.isNotEmpty ? _screens[_currentIndex] : const SizedBox(),
+        child: Column(
+          children: [
+            // Header đơn giản thay vì AppBar
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingM,
+                vertical: AppStyles.spacingM,
+              ),
+              decoration: const BoxDecoration(
+                gradient: AppColors.mainGradient,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(AppStyles.radiusL),
+                  bottomRight: Radius.circular(AppStyles.radiusL),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _getScreenTitle(),
+                      style: const TextStyle(
+                        color: AppColors.textOnMain,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.receipt_long, color: AppColors.textOnMain),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const OrderListScreen(),
+                        ),
+                      );
+                    },
+                    tooltip: 'Quản lý đơn hàng',
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: AppColors.textOnMain),
+                    onSelected: (value) async {
+                      switch (value) {
+                        case 'shop_info':
+                          _showShopInfo();
+                          break;
+                        case 'logout':
+                          _logout();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'shop_info',
+                        child: Row(
+                          children: [
+                            Icon(Icons.store, size: 18),
+                            SizedBox(width: AppStyles.spacingS),
+                            Text('Thông tin cửa hàng'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, size: 18, color: AppColors.errorColor),
+                            SizedBox(width: AppStyles.spacingS),
+                            Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Content area
+            Expanded(
+              child: _screens.isNotEmpty 
+                ? _screens[_currentIndex] 
+                : const SizedBox(),
+            ),
+          ], 
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -312,13 +517,13 @@ class _MainScreenState extends State<MainScreen> {
               BottomNavigationBarItem(
                 icon: const Padding(
                   padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(Icons.add_circle_outline, size: 26),
+                  child: Icon(Icons.receipt_long_outlined, size: 26),
                 ),
                 activeIcon: const Padding(
                   padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(Icons.add_circle, size: 26),
+                  child: Icon(Icons.receipt_long, size: 26),
                 ),
-                label: 'Nhập liệu (${_records.length})',
+                label: 'Đơn hàng',
               ),
               const BottomNavigationBarItem(
                 icon: Padding(
@@ -342,16 +547,16 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 label: 'Báo cáo',
               ),
-              BottomNavigationBarItem(
-                icon: const Padding(
+              const BottomNavigationBarItem(
+                icon: Padding(
                   padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(Icons.list_alt_outlined, size: 26),
+                  child: Icon(Icons.inventory_outlined, size: 26),
                 ),
-                activeIcon: const Padding(
+                activeIcon: Padding(
                   padding: EdgeInsets.only(bottom: 4),
-                  child: Icon(Icons.list_alt, size: 26),
+                  child: Icon(Icons.inventory, size: 26),
                 ),
-                label: 'DS (${_records.length})',
+                label: 'Sản phẩm',
               ),
             ],
           ),

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'screens/app_router.dart';
-import 'screens/business_setup_screen.dart';
 import 'screens/main_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/shop_setup_screen.dart';
+import 'services/shop_service.dart';
 import 'constants/app_colors.dart';
 import 'constants/app_styles.dart';
 
@@ -34,17 +35,16 @@ void main() async {
 
 // App initialization function
 Future<void> _initializeApp() async {
-  // Simulate app initialization (replace with actual initialization)
-  await Future.delayed(const Duration(seconds: 2));
-  
-  // You can add actual initialization here:
-  // - Database setup
-  // - API connections
-  // - User preferences loading
-  // - etc.
-  
-  // Remove splash screen when initialization is complete
-  FlutterNativeSplash.remove();
+  try {
+    // Minimal initialization to reduce memory usage
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Remove splash screen when initialization is complete
+    FlutterNativeSplash.remove();
+  } catch (e) {
+    print('Error during app initialization: $e');
+    FlutterNativeSplash.remove();
+  }
 }
 
 class KeToAnApp extends StatelessWidget {
@@ -53,7 +53,6 @@ class KeToAnApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Kế Toán AI',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -99,11 +98,97 @@ class KeToAnApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const AppRouter(),
-      routes: {
-        '/setup': (context) => const BusinessSetupScreen(),
-        '/main': (context) => const MainScreen(),
-      },
+      home: const AppInitializer(),
     );
+  }
+}
+
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  final ShopService _shopService = ShopService();
+  bool _isLoading = true;
+  Widget? _nextScreen;
+
+  @override
+  void initState() {
+    super.initState();
+    _determineInitialScreen();
+  }
+
+  Future<void> _determineInitialScreen() async {
+    try {
+      // Minimal delay to prevent memory issues
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      final appStatus = await _shopService.getAppStatus();
+      
+      if (!appStatus['isLoggedIn']) {
+        // User not logged in -> go to login screen
+        _nextScreen = const LoginScreen();
+      } else if (!appStatus['isSetupComplete']) {
+        // User logged in but setup not complete -> go to setup screen
+        _nextScreen = const ShopSetupScreen();
+      } else {
+        // User logged in and setup complete -> go to main screen
+        _nextScreen = const MainScreen();
+      }
+    } catch (e) {
+      print('Error determining initial screen: $e');
+      // Default to login screen on error
+      _nextScreen = const LoginScreen();
+    }
+    
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.backgroundPrimary,
+                AppColors.backgroundSecondary,
+                AppColors.mainColor,
+              ],
+            ),
+          ),
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.textOnMain),
+                ),
+                SizedBox(height: AppStyles.spacingL),
+                Text(
+                  'Đang khởi tạo ứng dụng...',
+                  style: TextStyle(
+                    color: AppColors.textOnMain,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return _nextScreen ?? const LoginScreen();
   }
 }

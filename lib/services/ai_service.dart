@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../models/finance_record.dart';
 import '../models/chat_message.dart';
+import '../models/product.dart';
+import '../models/order.dart';
 import '../utils/format_utils.dart';
 import 'storage_manager.dart';
+import 'product_service.dart';
 
 class AIService {
   // API Keys từ Python.py
@@ -16,6 +19,7 @@ class AIService {
   int _currentApiKeyIndex = 0;
   
   final StorageManager _storageManager = StorageManager();
+  final ProductService _productService = ProductService();
 
   String _getPromptTypeInput(String userInput) {
     final now = DateTime.now();
@@ -43,6 +47,12 @@ class AIService {
     Input: 'Kế toán là gì'
     Output: {"type_input": "search"}
     
+    Input: 'Bán 2 chai nước suối, 1 bánh mì'
+    Output: {"type_input": "order"}
+    
+    Input: 'Tạo đơn hàng 3 bút bi, 5 gói mì tôm'
+    Output: {"type_input": "order"}
+    
     Hãy phân tích dữ liệu sau: $userInput''';
   }
 
@@ -53,10 +63,52 @@ class AIService {
     Context: Người dùng sẽ nói về doanh thu và chi phí trong ngày. Nếu tiền nợ sẽ tính vào tiền chi phí
     Task: Trích xuất chính xác số tiền và chuyển đổi thành JSON.
     Examples: Input: 'Hôm nay bán được 500k, mua hàng hết 300k' 
-    Output: {"doanh_thu": 500000, "chi_phi": 300000,"ghi_chu": "", "ngay_tao": "2024-01-15"} //Ghi chú: Nếu dữ liệu không liên quan thì trả về ""
+    Output: {"doanh_thu": 500000, "chi_phi": 300000,"ghi_chu": "", "ngay_tao": "2024-01-15"} //Ghi chú: ""
     Input: "Thu về 2 triệu 5, chi tiêu 1 triệu 2"
-    Output: {"doanh_thu": 2500000, "chi_phi": 1200000,"ghi_chu": "", "ngay_tao": "2024-01-15"} Response (JSON only) không có Json data:  //Ghi chú: Nếu dữ liệu không liên quan thì trả về ""
+    Output: {"doanh_thu": 2500000, "chi_phi": 1200000,"ghi_chu": "", "ngay_tao": "2024-01-15"} Response (JSON only) không có Json data:  //Ghi chú: ""
     Nếu dữ liệu không liên quan thì trả về 'Error'
+    Hãy phân tích dữ liệu sau: $userInput''';
+  }
+
+  String _getOrderPromptText(String userInput, List<Product> availableProducts) {
+    final now = DateTime.now();
+    final productList = availableProducts.map((p) => 
+      '{"name": "${p.name}", "code": "${p.code}", "unit": "${p.unit}", "price": ${p.sellingPrice}}'
+    ).join(', ');
+    
+    return '''Bạn là AI chuyên xử lý đơn hàng bán hàng Việt Nam.
+    Thời gian hiện tại: ${now.toString().split(' ')[0]}
+    Danh sách sản phẩm có sẵn: [$productList]
+    
+    Context: Người dùng mô tả đơn hàng bán hàng. Hãy phân tích và trích xuất thông tin sản phẩm.
+    Task: Trích xuất thông tin sản phẩm và số lượng, khớp với sản phẩm có sẵn.
+    
+    Examples:
+    Input: 'Bán 2 chai nước suối Lavie, 1 bánh mì sandwich'
+    Output: {
+      "success": true,
+      "items": [
+        {"product_name": "Nước suối Lavie 500ml", "quantity": 2, "unit": "Chai", "matched": true},
+        {"product_name": "Bánh mì sandwich", "quantity": 1, "unit": "Cái", "matched": true}
+      ],
+      "customer_name": "",
+      "note": ""
+    }
+    
+    Input: 'Khách hàng Anh Minh mua 5 bút bi, 3 gói mì tôm, ghi chú: khách VIP'
+    Output: {
+      "success": true,
+      "items": [
+        {"product_name": "Bút bi", "quantity": 5, "unit": "Cái", "matched": false},
+        {"product_name": "Mì tôm", "quantity": 3, "unit": "Gói", "matched": false}
+      ],
+      "customer_name": "Anh Minh",
+      "note": "khách VIP"
+    }
+    
+    Nếu không khớp sản phẩm thì matched = false, nếu khớp thì matched = true và dùng tên chính xác từ danh sách.
+    Nếu dữ liệu không liên quan đến bán hàng thì trả về {"success": false, "reason": "not_order_related"}
+    
     Hãy phân tích dữ liệu sau: $userInput''';
   }
 
@@ -117,6 +169,104 @@ class AIService {
       ghiChu: data["ghi_chu"] ?? "",
       ngayTao: DateTime.parse(data["ngay_tao"]),
     );
+  }
+
+  Future<Map<String, dynamic>?> extractOrderData(String userInput) async {
+    final products = await _productService.getActiveProducts();
+    final orderResponse = await callGeminiAPI(_getOrderPromptText(userInput, products));
+    final cleanOrderJson = _cleanJsonText(orderResponse);
+    
+    try {
+      final data = jsonDecode(cleanOrderJson);
+      if (data["success"] != true) {
+        return null;
+      }
+      
+      // Match products with available products
+      final List<Map<String, dynamic>> processedItems = [];
+      for (final item in data["items"]) {
+        final productName = item["product_name"];
+        final quantity = item["quantity"];
+        final unit = item["unit"] ?? "Cái";
+        final matched = item["matched"] ?? false;
+        
+        Product? matchedProduct;
+        if (matched) {
+          // Find exact match
+          matchedProduct = products.firstWhere(
+            (p) => p.name.toLowerCase() == productName.toLowerCase(),
+            orElse: () => products.firstWhere(
+              (p) => p.name.toLowerCase().contains(productName.toLowerCase()) ||
+                     productName.toLowerCase().contains(p.name.toLowerCase()),
+              orElse: () => Product(
+                id: '',
+                code: '',
+                name: productName,
+                sellingPrice: 0,
+                costPrice: 0,
+                unit: unit,
+              ),
+            ),
+          );
+        } else {
+          // Try fuzzy matching
+          matchedProduct = _findBestProductMatch(productName, products);
+        }
+        
+        processedItems.add({
+          "product": matchedProduct,
+          "quantity": quantity,
+          "original_name": productName,
+          "matched": matchedProduct?.id.isNotEmpty == true,
+        });
+      }
+      
+      return {
+        "success": true,
+        "items": processedItems,
+        "customer_name": data["customer_name"] ?? "",
+        "note": data["note"] ?? "",
+      };
+    } catch (e) {
+      print('Error parsing order data: $e');
+      return null;
+    }
+  }
+
+  Product? _findBestProductMatch(String searchName, List<Product> products) {
+    final searchLower = searchName.toLowerCase();
+    
+    // Exact match
+    for (final product in products) {
+      if (product.name.toLowerCase() == searchLower) {
+        return product;
+      }
+    }
+    
+    // Contains match
+    for (final product in products) {
+      if (product.name.toLowerCase().contains(searchLower) ||
+          searchLower.contains(product.name.toLowerCase())) {
+        return product;
+      }
+    }
+    
+    // Keyword match
+    final searchWords = searchLower.split(' ');
+    for (final product in products) {
+      final productWords = product.name.toLowerCase().split(' ');
+      int matchCount = 0;
+      for (final word in searchWords) {
+        if (productWords.any((pw) => pw.contains(word) || word.contains(pw))) {
+          matchCount++;
+        }
+      }
+      if (matchCount >= searchWords.length ~/ 2) {
+        return product;
+      }
+    }
+    
+    return null;
   }
 
   String generateReport(Map<String, dynamic> analysis, List<FinanceRecord> records) {
@@ -226,6 +376,55 @@ ${totalRevenue > 0 ? '📋 Tỷ lệ lợi nhuận: ${(totalProfit / totalRevenu
             "profit": record.loiNhuan,
           };
         }
+      } else if (analysis["type_input"] == "order") {
+        // Xử lý đơn hàng
+        final orderData = await extractOrderData(userMessage);
+        messageType = "order";
+        
+        if (orderData == null || orderData["success"] != true) {
+          aiResponse = "Không thể trích xuất thông tin đơn hàng. Vui lòng mô tả rõ sản phẩm và số lượng.";
+          metadata = {"success": false, "reason": "invalid_order_data"};
+        } else {
+          final items = orderData["items"] as List<Map<String, dynamic>>;
+          final customerName = orderData["customer_name"] as String;
+          final note = orderData["note"] as String;
+          
+          String itemsText = "";
+          double estimatedTotal = 0;
+          int matchedCount = 0;
+          
+          for (int i = 0; i < items.length; i++) {
+            final item = items[i];
+            final product = item["product"];
+            final quantity = item["quantity"];
+            final matched = item["matched"];
+            final originalName = item["original_name"];
+            
+            if (matched && product != null) {
+              final lineTotal = quantity * product.sellingPrice;
+              estimatedTotal += lineTotal;
+              matchedCount++;
+              itemsText += "✅ ${product.name}: ${quantity} ${product.unit} × ${FormatUtils.formatCurrency(product.sellingPrice)} = ${FormatUtils.formatCurrency(lineTotal)} VNĐ\n";
+            } else {
+              itemsText += "❓ ${originalName}: ${quantity} (chưa khớp sản phẩm)\n";
+            }
+          }
+          
+          aiResponse = '''🛒 Đơn hàng đã được phân tích:
+${customerName.isNotEmpty ? '👤 Khách hàng: $customerName\n' : ''}$itemsText
+📊 Tổng ước tính: ${FormatUtils.formatCurrency(estimatedTotal)} VNĐ
+✅ Khớp sản phẩm: $matchedCount/${items.length}
+${note.isNotEmpty ? '📝 Ghi chú: $note\n' : ''}
+${matchedCount < items.length ? '\n⚠️ Một số sản phẩm chưa khớp với kho hàng. Vui lòng kiểm tra và điều chỉnh.' : ''}''';
+          
+          metadata = {
+            "success": true,
+            "order_data": orderData,
+            "estimated_total": estimatedTotal,
+            "matched_count": matchedCount,
+            "total_items": items.length,
+          };
+        }
       } else if (analysis["type_input"] == "report") {
         // Xử lý báo cáo
         messageType = "report";
@@ -239,7 +438,7 @@ ${totalRevenue > 0 ? '📋 Tỷ lệ lợi nhuận: ${(totalProfit / totalRevenu
       } else {
         // Xử lý câu hỏi chung
         messageType = "search";
-        final generalResponse = await callGeminiAPI("$userMessage **Tóm tắt, ngắn gọn, dễ hiểu, Loại bỏ tất cả các dấu ký tự đặc biệt chỉ sử dụng gạch đầu dòng (dấu '-')");
+        final generalResponse = await callGeminiAPI("$userMessage Giải thích ngắn gọn về kế toán và tài chính");
         aiResponse = generalResponse;
         metadata = {"query": userMessage};
       }

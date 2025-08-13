@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/finance_record.dart';
 import '../models/chat_message.dart';
+import '../models/order.dart';
 import '../services/ai_service.dart';
-import '../services/storage_manager.dart';
+import '../services/order_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
@@ -27,27 +28,14 @@ class AIInputScreen extends StatefulWidget {
 class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final ScrollController _suggestionsScrollController = ScrollController();
   final AIService _aiService = AIService();
-  final StorageManager _storageManager = StorageManager();
+  final OrderService _orderService = OrderService();
   List<ChatMessage> _messages = [];
   bool _isLoading = false;
   bool _isLoadingHistory = true;
   bool _isTyping = false;
   late AnimationController _typingAnimationController;
   late AnimationController _voiceAnimationController;
-
-  // Danh sách gợi ý nhanh
-  final List<String> _quickSuggestions = [
-    'Báo cáo doanh thu tháng này',
-    'Báo cáo doanh thu năm này',
-    'Báo cáo doanh thu quý này',
-    // 'Tổng lợi nhuận tháng này',
-    // 'Phân tích xu hướng doanh thu',
-    // 'So sánh doanh thu các tháng',
-    // 'Doanh thu cao nhất là bao nhiều?',
-    // 'Tháng nào lỗ nhiều nhất?',
-  ];
 
   @override
   void initState() {
@@ -61,43 +49,14 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
-    // Không cần scroll listener với reverse ListView
-    
     // Voice feature will be implemented in future updates
     _loadChatHistory();
-  }
-
-  void _scrollListener() {
-    // Simple listener để maintain bottom position
-  }
-
-  void _jumpToBottom() {
-    // Sử dụng SchedulerBinding để đảm bảo timing chính xác
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Thêm delay nhỏ để đảm bảo ListView đã render xong
-      Future.delayed(const Duration(milliseconds: 50), () {
-        if (_scrollController.hasClients && mounted) {
-          final maxExtent = _scrollController.position.maxScrollExtent;
-          if (maxExtent > 0) {
-            _scrollController.jumpTo(maxExtent);
-          }
-        }
-      });
-    });
-  }
-
-  @override
-  void didUpdateWidget(AIInputScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Với reverse ListView, không cần thêm logic scroll
   }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    _suggestionsScrollController.dispose();
     _typingAnimationController.dispose();
     _voiceAnimationController.dispose();
     super.dispose();
@@ -181,13 +140,12 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
 
   Future<void> _loadChatHistory() async {
     try {
-      final history = await _storageManager.getChatHistory();
+      final history = await _aiService.getChatHistory();
       setState(() {
         _messages = history;
         _isLoadingHistory = false;
       });
-      
-      // Với reverse ListView, không cần scroll nữa
+      _scrollToBottom();
     } catch (e) {
       print('Error loading chat history: $e');
       setState(() {
@@ -196,27 +154,16 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     }
   }
 
-
-
-    void _scrollToBottom({bool delayed = false}) {
-    // Chỉ sử dụng animation cho tin nhắn mới (smooth scroll)
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients && _messages.isNotEmpty) {
-        final maxExtent = _scrollController.position.maxScrollExtent;
-        if (maxExtent > 0) {
-          _scrollController.animateTo(
-            maxExtent,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          );
-        }
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
-  }
-
-  void _onSuggestionTap(String suggestion) {
-    _messageController.text = suggestion;
-    _sendMessage();
   }
 
   Future<void> _sendMessage() async {
@@ -227,44 +174,21 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     final userMessage = _messageController.text.trim();
     _messageController.clear();
 
-    // 1. Thêm tin nhắn user ngay lập tức
-    final userChatMessage = ChatMessage(
-      text: userMessage,
-      isUser: true,
-      timestamp: DateTime.now(),
-      type: 'user_input',
-    );
-
     setState(() {
-      _messages.add(userChatMessage);
       _isLoading = true;
       _isTyping = true;
     });
 
-    // Debug: In ra để kiểm tra state
-    print('User message added: ${_messages.length} messages');
-    print('Typing started: _isTyping = $_isTyping, _isLoading = $_isLoading');
+    // Scroll to bottom to show typing indicator
+    _scrollToBottom();
 
     try {
-      // 2. Sử dụng processMessage từ AI service
+      // Sử dụng processMessage từ AI service
       final aiResponse = await _aiService.processMessage(
           userMessage, widget.records);
 
-      // 3. Thêm tin nhắn AI vào danh sách (thay vì reload toàn bộ)
-      final aiChatMessage = ChatMessage(
-        text: aiResponse.text,
-        isUser: false,
-        timestamp: DateTime.now(),
-        type: aiResponse.type,
-        metadata: aiResponse.metadata,
-      );
-
-      setState(() {
-        _messages.add(aiChatMessage);
-      });
-
-             // 4. Lưu toàn bộ chat history vào storage
-       await _storageManager.saveChatHistory(_messages);
+      // Reload lại lịch sử chat để có messages mới
+      await _loadChatHistory();
 
       // Nếu là entry thành công, hiển thị dialog xác nhận
       if (aiResponse.type == 'entry' &&
@@ -273,6 +197,14 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         final recordData = aiResponse.metadata!['record'];
         final record = FinanceRecord.fromJson(recordData);
         await _showSaveConfirmationDialog(record);
+      }
+      
+      // Nếu là order thành công, hiển thị dialog tạo đơn hàng
+      if (aiResponse.type == 'order' &&
+          aiResponse.metadata != null &&
+          aiResponse.metadata!['success'] == true) {
+        final orderData = aiResponse.metadata!['order_data'];
+        await _showOrderConfirmationDialog(orderData);
       }
     } catch (e) {
       print('Error sending message: $e');
@@ -289,11 +221,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         _isLoading = false;
         _isTyping = false;
       });
-      
-      // Debug: In ra để kiểm tra state
-      print('Typing finished: _isTyping = $_isTyping, _isLoading = $_isLoading');
-      
-      // Với reverse ListView, tin nhắn mới tự động hiển thị ở dưới
+      _scrollToBottom();
     }
   }
 
@@ -508,7 +436,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
 
     if (confirm == true) {
-      await _storageManager.clearChatHistory();
+      await _aiService.clearChatHistory();
       setState(() {
         _messages.clear();
       });
@@ -834,99 +762,70 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildSuggestionChips() {
+  Widget _buildVoiceButton() {
     return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: AppStyles.spacingM),
-      child: SingleChildScrollView(
-        controller: _suggestionsScrollController,
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: _quickSuggestions.asMap().entries.map((entry) {
-            final index = entry.key;
-            final suggestion = entry.value;
-            
-            return Container(
-              margin: EdgeInsets.only(
-                left: index == 0 ? 0 : AppStyles.spacingS,
-                right: index == _quickSuggestions.length - 1 ? 0 : 0,
-              ), 
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(  
-                  onTap: () => _onSuggestionTap(suggestion),
-                  borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppStyles.spacingM,
-                      vertical: AppStyles.spacingS,
+      margin: const EdgeInsets.only(right: AppStyles.spacingS),
+      child: GestureDetector(
+        onTap: _showVoiceComingSoonDialog,
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.infoColor,
+                AppColors.infoColor.withOpacity(0.8),
+              ],
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.infoColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(
+                Icons.mic,
+                color: AppColors.textOnMain,
+                size: 24,
+              ),
+              // "Coming soon" indicator
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: AppColors.warningColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.textOnMain,
+                      width: 1,
                     ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.mainColor.withOpacity(0.1),
-                          AppColors.mainColor.withOpacity(0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '!',
+                      style: TextStyle(
+                        color: AppColors.textOnMain,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
                       ),
-                      borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                      border: Border.all(
-                        color: AppColors.mainColor.withOpacity(0.2),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.mainColor.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getSuggestionIcon(suggestion),
-                          size: 16,
-                          color: AppColors.mainColor,
-                        ),
-                        const SizedBox(width: AppStyles.spacingXS),
-                        Text(
-                          suggestion,
-                          style: AppStyles.bodySmall.copyWith(
-                            color: AppColors.mainColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
               ),
-            );
-          }).toList(),
+            ],
+          ),
         ),
       ),
     );
-  } 
-
-  IconData _getSuggestionIcon(String suggestion) {
-    if (suggestion.contains('báo cáo') || suggestion.contains('Báo cáo')) {
-      return Icons.bar_chart;
-    } else if (suggestion.contains('bán') || suggestion.contains('doanh thu')) {
-      return Icons.trending_up;
-    } else if (suggestion.contains('chi phí') || suggestion.contains('Chi phí')) {
-      return Icons.trending_down;
-    } else if (suggestion.contains('lợi nhuận')) {
-      return Icons.account_balance_wallet;
-    } else if (suggestion.contains('phân tích') || suggestion.contains('so sánh')) {
-      return Icons.analytics;
-    } else if (suggestion.contains('cao nhất') || suggestion.contains('nhiều nhất')) {
-      return Icons.query_stats;
-    } else {
-      return Icons.chat_bubble_outline;
-    }
   }
 
   Widget _buildEmptyState() {
@@ -980,7 +879,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               border: Border.all(color: AppColors.borderLight),
             ),
             child: Text(
-              'Hoặc chọn gợi ý bên dưới để bắt đầu',
+              'Hãy thử: "Hôm nay bán được 500k, mua hàng 300k"',
               style: AppStyles.bodySmall.copyWith(
                 color: AppColors.textSecondary,
                 fontStyle: FontStyle.italic,
@@ -1001,7 +900,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.history), 
+            icon: const Icon(Icons.history),
             onPressed: () {
               Navigator.push(
                 context,
@@ -1035,26 +934,11 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               controller: _scrollController,
               padding: const EdgeInsets.all(AppStyles.spacingM),
               itemCount: _messages.length + (_isTyping ? 1 : 0),
-              reverse: true, // Đảo ngược để tin nhắn mới nhất ở dưới
               itemBuilder: (context, index) {
-                if (_isTyping && index == 0) {
+                if (index == _messages.length && _isTyping) {
                   return _buildTypingIndicator();
                 }
-                
-                // Handle edge case khi messages empty
-                if (_messages.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                
-                final messageIndex = _isTyping ? index - 1 : index;
-                final reversedIndex = _messages.length - 1 - messageIndex;
-                
-                // Đảm bảo index valid
-                if (reversedIndex < 0 || reversedIndex >= _messages.length) {
-                  return const SizedBox.shrink();
-                }
-                
-                return _buildMessageBubble(_messages[reversedIndex]);
+                return _buildMessageBubble(_messages[index]);
               },
             ),
           ),
@@ -1083,12 +967,6 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                 ],
               ),
             ),
-          // Suggestion chips
-          if (!_isLoading && _messageController.text.isEmpty) ...[
-            const SizedBox(height: AppStyles.spacingS),
-            _buildSuggestionChips(),
-          ],
-          
           // Voice feature placeholder - will be implemented in future updates
           Container(
             padding: const EdgeInsets.all(AppStyles.spacingM),
@@ -1100,35 +978,31 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             ),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    // _buildVoiceButton(),
-                    Expanded(
+                                  Row(
+                    children: [
+                      // _buildVoiceButton(),
+                      Expanded(
                       child: TextField(
                         controller: _messageController,
                         enabled: !_isLoading,
                         maxLines: null,
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _sendMessage(),
-                        onChanged: (value) {
-                          // Rebuild để hiển thị/ẩn suggestion chips
-                          setState(() {});
-                        },
                         decoration: InputDecoration(
                           hintText: 'Nhập tin nhắn ...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderLight,
+                                                      border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                              borderSide: const BorderSide(
+                                color: AppColors.borderLight,
+                              ),
                             ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                            borderSide: const BorderSide(
-                              color: AppColors.mainColor, 
-                              width: 2,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                              borderSide: const BorderSide(
+                                color: AppColors.mainColor, 
+                                width: 2,
+                              ),
                             ),
-                          ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppStyles.spacingM,
                             vertical: AppStyles.spacingS,
@@ -1137,7 +1011,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                       ),
                     ),
                     const SizedBox(width: AppStyles.spacingS),
-                    Container( 
+                    Container(
                       decoration: const BoxDecoration(
                         gradient: AppColors.mainGradient,
                         shape: BoxShape.circle,
@@ -1145,7 +1019,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                       child: IconButton(
                         icon: const Icon(Icons.send),
                         color: AppColors.textOnMain,
-                        onPressed: _isLoading ? null : _sendMessage,
+                                                  onPressed: _isLoading ? null : _sendMessage,
                       ),
                     ),
                   ],
@@ -1158,4 +1032,261 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
   }
 
+  Future<void> _showOrderConfirmationDialog(Map<String, dynamic> orderData) async {
+    final items = orderData["items"] as List<Map<String, dynamic>>;
+    final customerName = orderData["customer_name"] as String;
+    final note = orderData["note"] as String;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.infoColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shopping_cart,
+                color: AppColors.infoColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Text('Tạo đơn hàng?'),
+          ],
+        ),
+        content: Container(
+          width: double.maxFinite,
+          constraints: const BoxConstraints(maxHeight: 400),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'AI đã phân tích và tạo đơn hàng sau:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppStyles.spacingM),
+                
+                if (customerName.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingM),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundCard,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person, size: 20, color: AppColors.infoColor),
+                        const SizedBox(width: AppStyles.spacingS),
+                        Text('Khách hàng: $customerName'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppStyles.spacingM),
+                ],
+                
+                Container(
+                  padding: const EdgeInsets.all(AppStyles.spacingM),
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundCard,
+                    borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                    border: Border.all(color: AppColors.borderLight),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.list_alt, size: 20, color: AppColors.successColor),
+                          SizedBox(width: AppStyles.spacingS),
+                          Text('Sản phẩm:', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: AppStyles.spacingS),
+                      
+                      ...items.map((item) {
+                        final product = item["product"];
+                        final quantity = item["quantity"];
+                        final matched = item["matched"];
+                        final originalName = item["original_name"];
+                        
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(AppStyles.spacingS),
+                          decoration: BoxDecoration(
+                            color: matched ? AppColors.successColor.withOpacity(0.1) : AppColors.warningColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                            border: Border.all(
+                              color: matched ? AppColors.successColor : AppColors.warningColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                matched ? Icons.check_circle : Icons.help_outline,
+                                size: 16,
+                                color: matched ? AppColors.successColor : AppColors.warningColor,
+                              ),
+                              const SizedBox(width: AppStyles.spacingS),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      matched ? product.name : originalName,
+                                      style: const TextStyle(fontWeight: FontWeight.w500),
+                                    ),
+                                    Text(
+                                      '$quantity ${matched ? product.unit : "đơn vị"}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (matched)
+                                Text(
+                                  '${FormatUtils.formatCurrency(quantity * product.sellingPrice)} VNĐ',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.successColor,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+                
+                if (note.isNotEmpty) ...[
+                  const SizedBox(height: AppStyles.spacingM),
+                  Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingM),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundCard,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.note, size: 20, color: AppColors.textSecondary),
+                        const SizedBox(width: AppStyles.spacingS),
+                        Expanded(child: Text('Ghi chú: $note')),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.successColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Tạo đơn hàng'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _createOrderFromData(orderData);
+    }
+  }
+
+  Future<void> _createOrderFromData(Map<String, dynamic> orderData) async {
+    try {
+      final items = orderData["items"] as List<Map<String, dynamic>>;
+      final customerName = orderData["customer_name"] as String;
+      final note = orderData["note"] as String;
+      
+      // Tạo order items từ matched products
+      final List<OrderItem> orderItems = [];
+      for (final item in items) {
+        final product = item["product"];
+        final quantity = item["quantity"];
+        final matched = item["matched"];
+        
+        if (matched && product != null) {
+          orderItems.add(OrderItem.fromProduct(product, quantity));
+        }
+      }
+      
+      if (orderItems.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Không có sản phẩm nào khớp để tạo đơn hàng'),
+              backgroundColor: AppColors.warningColor,
+            ),
+          );
+        }
+        return;
+      }
+      
+      // Tạo đơn hàng
+      final order = Order(
+        id: '',
+        orderNumber: '',
+        orderDate: DateTime.now(),
+        status: OrderStatus.draft,
+        items: orderItems,
+        customerName: customerName,
+        customerPhone: '',
+        note: note,
+      );
+      
+      final success = await _orderService.addOrder(order);
+      
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã tạo đơn hàng thành công với ${orderItems.length} sản phẩm'),
+            backgroundColor: AppColors.successColor,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể tạo đơn hàng'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error creating order: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tạo đơn hàng: $e'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    }
+  }
 } 

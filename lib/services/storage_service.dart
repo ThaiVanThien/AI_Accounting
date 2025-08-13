@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/finance_record.dart';
 import '../models/chat_message.dart';
-import '../models/models.dart';
 
 class StorageService {
   static const String _financeRecordsKey = 'finance_records';
@@ -278,35 +277,5 @@ class StorageService {
   // Check if storage is available
   Future<bool> isStorageAvailable() async {
     return await init();
-  }
-
-  // Static methods for business user (delegate to BusinessUserService)
-  static Future<void> saveBusinessUser(BusinessUser user) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = jsonEncode(user.toMap());
-    await prefs.setString('business_user', userJson);
-    await prefs.setBool('setup_completed', true);
-  }
-
-  static Future<BusinessUser?> getBusinessUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('business_user');
-    
-    if (userJson == null) {
-      return null;
-    }
-
-    try {
-      final userMap = jsonDecode(userJson) as Map<String, dynamic>;
-      return BusinessUser.fromMap(userMap);
-    } catch (e) {
-      print('Error loading business user: $e');
-      return null;
-    }
-  }
-
-  static Future<bool> isSetupCompleted() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('setup_completed') ?? false;
   }
 } 

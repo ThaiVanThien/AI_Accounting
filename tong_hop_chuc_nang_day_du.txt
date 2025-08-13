@@ -1,0 +1,42 @@
+# Chức năng ứng dụng Small Accounting cho Tiểu Thương
+
+## 1. Đăng nhập & Khai báo thông tin cửa hàng
+- Đăng nhập bằng tài khoản được cấp (VD: tài khoản `huetechcoop`, mật khẩu `dev`).
+- Sau khi đăng nhập lần đầu, người dùng nhập thông tin cửa hàng:
+  - Tên cửa hàng
+  - Địa chỉ
+  - Số điện thoại
+  - Email
+  - Loại hình kinh doanh / Nhóm hàng
+
+## 2. Quản lý sản phẩm
+- **Thêm sản phẩm** với các thông tin:
+  - Mã sản phẩm (tự động sinh)
+  - Tên sản phẩm
+  - Giá bán
+  - Giá vốn
+  - Đơn vị tính (Cái, Hộp, Kg, Lít, Thùng)
+  - Mô tả
+  - Trạng thái (đang bán / ngừng bán)
+  - Số lượng tồn kho
+  - Số lượng tối thiểu cảnh báo
+- **Sửa sản phẩm**: chỉnh sửa thông tin sản phẩm đã có.
+- **Xem thông tin sản phẩm**: hiển thị toàn bộ chi tiết sản phẩm.
+
+## 3. Quản lý đơn hàng
+- **Tạo đơn hàng**:
+  - Nhập thủ công, lập hóa đơn cho từng đơn hàng.
+  - Chọn sản phẩm, nhập số lượng → hệ thống tính tiền → xác nhận lập hóa đơn.
+  - Hoặc lập hóa đơn gộp cho cả ngày.
+- **Nhập bằng AI**: người dùng nhập mô tả đơn hàng bằng câu văn tự nhiên, hệ thống AI phân tích và tự nhận diện sản phẩm, số lượng; nếu không khớp sản phẩm thì tính thành hóa đơn tổng.
+- **Cập nhật trạng thái đơn hàng**: mới tạo, đã thanh toán, đã hủy.
+
+## 4. Báo cáo doanh thu
+- Báo cáo doanh thu dựa trên tổng hóa đơn.
+- Xem báo cáo theo:
+  - Ngày
+  - Tháng
+  - Năm
+- Xuất dữ liệu báo cáo ra file (Excel/PDF) nếu cần.
+
+---

@@ -83,7 +83,12 @@ class _RecordListScreenState extends State<RecordListScreen> {
             gradient: AppColors.primaryGradient,
           ),
         ),
-
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -538,6 +543,62 @@ class _RecordListScreenState extends State<RecordListScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bộ lọc và sắp xếp'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Filter options
+            ListTile(
+              title: const Text('Hiển thị'),
+              trailing: DropdownButton<String>(
+                value: _filterBy,
+                onChanged: (value) {
+                  setState(() => _filterBy = value!);
+                  Navigator.pop(context);
+                },
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('Tất cả')),
+                  DropdownMenuItem(value: 'profit', child: Text('Lợi nhuận')),
+                  DropdownMenuItem(value: 'loss', child: Text('Thua lỗ')),
+                ],
+              ),
+            ),
+            // Sort options
+            ListTile(
+              title: const Text('Sắp xếp theo'),
+              trailing: DropdownButton<String>(
+                value: _sortBy,
+                onChanged: (value) {
+                  setState(() => _sortBy = value!);
+                  Navigator.pop(context);
+                },
+                items: const [
+                  DropdownMenuItem(value: 'date', child: Text('Ngày')),
+                  DropdownMenuItem(value: 'revenue', child: Text('Doanh thu')),
+                  DropdownMenuItem(value: 'cost', child: Text('Chi phí')),
+                  DropdownMenuItem(value: 'profit', child: Text('Lợi nhuận')),
+                ],
+              ),
+            ),
+            // Sort direction
+            SwitchListTile(
+              title: const Text('Sắp xếp tăng dần'),
+              value: _isAscending,
+              onChanged: (value) {
+                setState(() => _isAscending = value);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
