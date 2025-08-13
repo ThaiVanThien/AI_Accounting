@@ -5,6 +5,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
 import 'product_form_screen.dart';
+import '../main.dart'; // Import để sử dụng CommonScreenMixin
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -13,7 +14,7 @@ class ProductListScreen extends StatefulWidget {
   State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
-class _ProductListScreenState extends State<ProductListScreen> {
+class _ProductListScreenState extends State<ProductListScreen> with CommonScreenMixin {
   final ProductService _productService = ProductService();
   final TextEditingController _searchController = TextEditingController();
   
@@ -608,6 +609,80 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Quản lý sản phẩm'),
+        backgroundColor: AppColors.mainColor,
+        foregroundColor: AppColors.textOnMain,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addProduct,
+            tooltip: 'Thêm sản phẩm mới',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'add_product':
+                  _addProduct();
+                  break;
+                case 'refresh':
+                  _loadProducts();
+                  break;
+                case 'shop_info':
+                  showShopInfo();
+                  break;
+                case 'logout':
+                  logout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'add_product',
+                child: Row(
+                  children: [
+                    Icon(Icons.add),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Thêm sản phẩm mới'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'refresh',
+                child: Row(
+                  children: [
+                    Icon(Icons.refresh),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Làm mới'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'shop_info',
+                child: Row(
+                  children: [
+                    Icon(Icons.store),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Thông tin cửa hàng'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: AppColors.errorColor),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

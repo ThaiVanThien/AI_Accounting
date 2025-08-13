@@ -6,6 +6,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
 import 'order_form_screen.dart';
+import '../main.dart'; // Import để sử dụng CommonScreenMixin
 
 class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});
@@ -14,7 +15,7 @@ class OrderListScreen extends StatefulWidget {
   State<OrderListScreen> createState() => _OrderListScreenState();
 }
 
-class _OrderListScreenState extends State<OrderListScreen> {
+class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixin {
   final OrderService _orderService = OrderService();
   final TextEditingController _searchController = TextEditingController();
   
@@ -28,7 +29,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
   void initState() {
     super.initState();
     _loadOrders();
-  }
+  } 
 
   @override
   void dispose() {
@@ -880,6 +881,80 @@ class _OrderListScreenState extends State<OrderListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Quản lý hóa đơn'),
+        backgroundColor: AppColors.mainColor,
+        foregroundColor: AppColors.textOnMain,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addOrder,
+            tooltip: 'Tạo đơn hàng mới',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'create_order':
+                  _addOrder();
+                  break;
+                case 'refresh':
+                  _loadOrders();
+                  break;
+                case 'shop_info':
+                  showShopInfo();
+                  break;
+                case 'logout':
+                  logout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'create_order',
+                child: Row(
+                  children: [
+                    Icon(Icons.add),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Tạo đơn hàng mới'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'refresh',
+                child: Row(
+                  children: [
+                    Icon(Icons.refresh),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Làm mới'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'shop_info',
+                child: Row(
+                  children: [
+                    Icon(Icons.store),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Thông tin cửa hàng'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: AppColors.errorColor),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

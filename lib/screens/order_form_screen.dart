@@ -8,6 +8,7 @@ import '../services/product_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
+import '../screens/order_list_screen.dart';
 
 class OrderFormScreen extends StatefulWidget {
   final Order? order;
@@ -413,6 +414,18 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               onPressed: _generateOrderNumber,
               tooltip: 'Tạo số đơn mới',
             ),
+          IconButton(
+            icon: const Icon(Icons.list),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OrderListScreen(),
+                ),
+              );
+            },
+            tooltip: 'Xem danh sách đơn hàng',
+          ),
         ],
       ),
       body: Container(
@@ -820,6 +833,21 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const OrderListScreen(),
+            ),
+          );
+        },
+        backgroundColor: AppColors.infoColor,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.list),
+        label: const Text('Xem danh sách'),
+        tooltip: 'Xem danh sách đơn hàng',
       ),
     );
   }

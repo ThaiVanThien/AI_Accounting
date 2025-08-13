@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import '../services/shop_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import 'shop_setup_screen.dart';
-import 'main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

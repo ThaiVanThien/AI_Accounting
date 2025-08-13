@@ -1,54 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/finance_record.dart';
+import '../models/order.dart';
 import '../models/report.dart';
+import '../services/order_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
+import '../main.dart'; // Import để sử dụng CommonScreenMixin
 
 class ReportScreen extends StatefulWidget {
-  final List<FinanceRecord> records;
-
-  const ReportScreen({super.key, required this.records});
+  const ReportScreen({super.key});
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
-class _ReportScreenState extends State<ReportScreen> {
+class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
   String _selectedReportType = 'thang';
   int _selectedMonth = DateTime.now().month;
   int _selectedQuarter = ((DateTime.now().month - 1) ~/ 3) + 1;
   int _selectedYear = DateTime.now().year;
+  
+  final OrderService _orderService = OrderService();
+  List<Order> _orders = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final orders = await _orderService.getOrders();
+      setState(() {
+        _orders = orders;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi tải dữ liệu: $e'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    }
+  }
 
   Report _generateReport() {
-    List<FinanceRecord> filteredRecords = [];
+    List<Order> filteredOrders = [];
 
     switch (_selectedReportType) {
       case 'thang':
-        filteredRecords = widget.records.where((record) {
-          return record.ngayTao.month == _selectedMonth &&
-              record.ngayTao.year == _selectedYear;
+        filteredOrders = _orders.where((order) {
+          return order.orderDate.month == _selectedMonth &&
+              order.orderDate.year == _selectedYear;
         }).toList();
         break;
       case 'quy':
         int startMonth = (_selectedQuarter - 1) * 3 + 1;
         int endMonth = _selectedQuarter * 3;
-        filteredRecords = widget.records.where((record) {
-          return record.ngayTao.month >= startMonth &&
-              record.ngayTao.month <= endMonth &&
-              record.ngayTao.year == _selectedYear;
+        filteredOrders = _orders.where((order) {
+          return order.orderDate.month >= startMonth &&
+              order.orderDate.month <= endMonth &&
+              order.orderDate.year == _selectedYear;
         }).toList();
         break;
       case 'nam':
-        filteredRecords = widget.records.where((record) {
-          return record.ngayTao.year == _selectedYear;
+        filteredOrders = _orders.where((order) {
+          return order.orderDate.year == _selectedYear;
         }).toList();
         break;
     }
 
-    double totalRevenue = filteredRecords.fold(0, (sum, record) => sum + record.doanhThu);
-    double totalCost = filteredRecords.fold(0, (sum, record) => sum + record.chiPhi);
+    double totalRevenue = filteredOrders.fold(0, (sum, order) {
+      double orderTotal = order.items.fold(0, (itemSum, item) => itemSum + (item.unitPrice * item.quantity));
+      return sum + orderTotal;
+    });
+    
+    double totalCost = filteredOrders.fold(0, (sum, order) {
+      double orderCost = order.items.fold(0, (itemSum, item) => itemSum + (item.costPrice * item.quantity));
+      return sum + orderCost;
+    });
+    
     double totalProfit = totalRevenue - totalCost;
 
     return Report(
@@ -62,7 +102,7 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   Widget build(BuildContext context) {
     final report = _generateReport();
-    final hasData = widget.records.isNotEmpty;
+    final hasData = _orders.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -70,7 +110,7 @@ class _ReportScreenState extends State<ReportScreen> {
           children: [
             Icon(Icons.bar_chart, size: 24),
             SizedBox(width: AppStyles.spacingS),
-            Text('Báo Cáo Tài Chính'),
+            Text('Báo Cáo Đơn Hàng'),
           ],
         ),
         backgroundColor: AppColors.primaryBlue,
@@ -81,6 +121,48 @@ class _ReportScreenState extends State<ReportScreen> {
             gradient: AppColors.primaryGradient,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadOrders,
+            tooltip: 'Làm mới dữ liệu',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'shop_info':
+                  showShopInfo();
+                  break;
+                case 'logout':
+                  logout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'shop_info',
+                child: Row(
+                  children: [
+                    Icon(Icons.store),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Thông tin cửa hàng'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: AppColors.errorColor),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -93,7 +175,20 @@ class _ReportScreenState extends State<ReportScreen> {
             ],
           ),
         ),
-        child: hasData ? _buildReportContent(report) : _buildEmptyState(),
+        child: _isLoading ? _buildLoadingState() : (hasData ? _buildReportContent(report) : _buildEmptyState()),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: AppColors.primaryBlue),
+          const SizedBox(height: AppStyles.spacingM),
+          Text('Đang tải dữ liệu báo cáo...', style: AppStyles.bodyLarge),
+        ],
       ),
     );
   }
@@ -138,15 +233,15 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                   const SizedBox(height: AppStyles.spacingM),
                   _buildEmptyStateItem(
-                    Icons.add_circle,
-                    'Nhập dữ liệu tài chính',
-                    'Thêm thông tin doanh thu và chi phí',
+                    Icons.receipt_long,
+                    'Tạo đơn hàng',
+                    'Tạo đơn hàng với sản phẩm và giá cả',
                   ),
                   const SizedBox(height: AppStyles.spacingS),
                   _buildEmptyStateItem(
-                    Icons.smart_toy,
-                    'Sử dụng AI Chat',
-                    'Nói với AI về giao dịch của bạn',
+                    Icons.inventory,
+                    'Quản lý sản phẩm',
+                    'Thêm sản phẩm với giá vốn và giá bán',
                   ),
                 ],
               ),
@@ -578,8 +673,8 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: AppStyles.spacingS),
           _buildSummaryRow(
-            'Số giao dịch',
-            '${widget.records.length}',
+            'Số đơn hàng',
+            '${_orders.length}',
             AppColors.info,
           ),
         ],

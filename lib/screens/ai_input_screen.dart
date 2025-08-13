@@ -9,6 +9,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
 import 'chat_history_screen.dart';
+import '../main.dart'; // Import để sử dụng CommonScreenMixin
 
 
 class AIInputScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class AIInputScreen extends StatefulWidget {
   State<AIInputScreen> createState() => _AIInputScreenState();
 }
 
-class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateMixin {
+class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateMixin, CommonScreenMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final AIService _aiService = AIService();
@@ -917,6 +918,41 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               onPressed: _clearHistory,
               tooltip: 'Xóa lịch sử',
             ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'shop_info':
+                  showShopInfo();
+                  break;
+                case 'logout':
+                  logout();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'shop_info',
+                child: Row(
+                  children: [
+                    Icon(Icons.store),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Thông tin cửa hàng'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: AppColors.errorColor),
+                    SizedBox(width: AppStyles.spacingS),
+                    Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(

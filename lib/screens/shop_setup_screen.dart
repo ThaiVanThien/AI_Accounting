@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../main.dart';
 import '../models/shop_info.dart';
 import '../services/shop_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
-import 'main_screen.dart';
 
 class ShopSetupScreen extends StatefulWidget {
   const ShopSetupScreen({super.key});
