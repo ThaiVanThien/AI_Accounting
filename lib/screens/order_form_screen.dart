@@ -199,11 +199,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         SnackBar(
           content: const Text('Vui lòng thêm ít nhất một sản phẩm vào đơn hàng'),
           backgroundColor: AppColors.errorColor,
-          action: SnackBarAction(
-            label: 'Thêm sản phẩm',
-            textColor: AppColors.textOnMain,
-            onPressed: _addProduct,
-          ),
         ),
       );
       return;

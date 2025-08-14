@@ -159,13 +159,9 @@ class Product {
     'Cái',
     'Hộp',
     'Kg',
-    'Lít',
     'Thùng',
-    'Gói',
+    'Lạng',
     'Chai',
-    'Túi',
-    'Cuộn',
-    'Tấm'
   ];
 
   // Danh sách nhóm hàng mặc định
