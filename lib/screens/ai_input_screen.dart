@@ -1291,8 +1291,6 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         orderDate: DateTime.now(),
         status: OrderStatus.draft,
         items: orderItems,
-        customerName: customerName,
-        customerPhone: '',
         note: note,
       );
       

@@ -427,7 +427,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         maxLines: 3,
                       ),
                       const SizedBox(height: AppStyles.spacingL),
-                      
                       Row(
                         children: [
                           Expanded(
@@ -443,7 +442,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(width: AppStyles.spacingM),
+                        ],
+                      ),
+                      const SizedBox(height: AppStyles.spacingL),
+                      Row(
+                        children: [
                           Expanded(
                             child: _buildDropdown(
                               label: 'Nhóm hàng',
@@ -493,7 +496,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         ],
                       ),
                       const SizedBox(height: AppStyles.spacingL),
-                      
                       Row(
                         children: [
                           Expanded(
@@ -517,7 +519,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(width: AppStyles.spacingM),
+                        ],
+                      ),
+                      const SizedBox(height: AppStyles.spacingL),
+                      Row(
+                        children: [
                           Expanded(
                             child: _buildTextField(
                               controller: _costPriceController,

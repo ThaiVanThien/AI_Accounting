@@ -67,12 +67,6 @@ class ProductService {
   // Get all products
   Future<List<Product>> getProducts() async {
     if (!await init()) return [];
-    
-    // Tạo dữ liệu mẫu nếu danh sách trống
-    if (_products.isEmpty) {
-      await _createSampleProducts();
-    }
-    
     return List.from(_products);
   }
 
@@ -211,31 +205,57 @@ class ProductService {
     }
   }
 
-  // Update stock quantity
-  Future<bool> updateStock(String productId, int newQuantity) async {
-    final product = await getProductById(productId);
-    if (product == null) return false;
-    
-    final updatedProduct = product.copyWith(stockQuantity: newQuantity);
-    return await updateProduct(updatedProduct);
-  }
-
   // Reduce stock (when selling)
   Future<bool> reduceStock(String productId, int quantity) async {
-    final product = await getProductById(productId);
-    if (product == null) return false;
-    
-    final newQuantity = (product.stockQuantity - quantity).clamp(0, double.infinity).toInt();
-    return await updateStock(productId, newQuantity);
+    try {
+      final product = await getProductById(productId);
+      if (product == null) return false;
+      
+      // Kiểm tra tồn kho có đủ không
+      if (product.stockQuantity < quantity) {
+        print('Insufficient stock for product ${product.name}: required $quantity, available ${product.stockQuantity}');
+        return false;
+      }
+      
+      final newQuantity = (product.stockQuantity - quantity).clamp(0, double.infinity).toInt();
+      return await updateStock(productId, newQuantity);
+    } catch (e) {
+      print('Error reducing stock: $e');
+      return false;
+    }
   }
 
   // Increase stock (when restocking)
   Future<bool> increaseStock(String productId, int quantity) async {
-    final product = await getProductById(productId);
-    if (product == null) return false;
-    
-    final newQuantity = product.stockQuantity + quantity;
-    return await updateStock(productId, newQuantity);
+    try {
+      final product = await getProductById(productId);
+      if (product == null) return false;
+      
+      final newQuantity = product.stockQuantity + quantity;
+      return await updateStock(productId, newQuantity);
+    } catch (e) {
+      print('Error increasing stock: $e');
+      return false;
+    }
+  }
+
+  // Update stock quantity
+  Future<bool> updateStock(String productId, int newQuantity) async {
+    try {
+      final product = await getProductById(productId);
+      if (product == null) return false;
+      
+      if (newQuantity < 0) {
+        print('Stock quantity cannot be negative: $newQuantity');
+        return false;
+      }
+      
+      final updatedProduct = product.copyWith(stockQuantity: newQuantity);
+      return await updateProduct(updatedProduct);
+    } catch (e) {
+      print('Error updating stock: $e');
+      return false;
+    }
   }
 
   // Get statistics
@@ -314,34 +334,6 @@ class ProductService {
     return products.map((p) => p.toJson()).toList();
   }
 
-  // Create sample products - minimal data
-  Future<void> _createSampleProducts() async {
-    try {
-      // Chỉ tạo 1 sản phẩm mẫu để tiết kiệm memory
-      _products = [
-        Product(
-          id: '1',
-          code: 'SP000001',
-          name: 'Sản phẩm mẫu',
-          sellingPrice: 10000,
-          costPrice: 8000,
-          unit: 'Cái',
-          category: 'Demo',
-          description: 'Sản phẩm demo',
-          stockQuantity: 10,
-          minStockLevel: 5,
-        ),
-      ];
-
-      _nextId = 2;
-      await _saveProducts();
-      await _prefs?.setInt(_nextProductIdKey, _nextId);
-    } catch (e) {
-      print('Error creating sample products: $e');
-      _products = [];
-      _nextId = 1;
-    }
-  }
 
   // Get next product code
   Future<String> getNextProductCode() async {

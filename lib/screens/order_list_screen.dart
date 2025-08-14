@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/order.dart';
+import '../models/customer.dart';
 import '../services/order_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
@@ -18,7 +19,7 @@ class OrderListScreen extends StatefulWidget {
 class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixin {
   final OrderService _orderService = OrderService();
   final TextEditingController _searchController = TextEditingController();
-  
+   
   List<Order> _orders = [];
   List<Order> _filteredOrders = [];
   bool _isLoading = true;
@@ -42,25 +43,21 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
     
     try {
       final orders = await _orderService.getOrders();
-      // Sort by date descending (newest first)
-      orders.sort((a, b) => b.orderDate.compareTo(a.orderDate));
+      
+      orders.sort((a, b) {
+        final timeA = a.createdAt ?? a.orderDate;
+        final timeB = b.createdAt ?? b.orderDate;
+        return timeB.compareTo(timeA); // Mới nhất lên đầu
+      });
       
       setState(() {
         _orders = orders;
         _filteredOrders = orders;
         _isLoading = false;
-      });
-      _applyFilters();
+      }); 
     } catch (e) {
+      print('Error loading orders: $e');
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi tải dữ liệu: $e'),
-            backgroundColor: AppColors.errorColor,
-          ),
-        );
-      }
     }
   }
 
@@ -72,8 +69,8 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
       final query = _searchController.text.toLowerCase();
       filtered = filtered.where((order) {
         return order.orderNumber.toLowerCase().contains(query) ||
-               order.customerName.toLowerCase().contains(query) ||
-               order.customerPhone.contains(query) ||
+               order.customer.name.toLowerCase().contains(query) ||
+               order.customer.phone.contains(query) ||
                order.note.toLowerCase().contains(query);
       }).toList();
     }
@@ -205,74 +202,136 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
                       _buildDetailRow('Số đơn hàng:', order.orderNumber),
                       _buildDetailRow('Ngày tạo:', FormatUtils.formatDateTime(order.orderDate)),
                       _buildDetailRow('Trạng thái:', order.statusDisplayName),
-                      if (order.customerName.isNotEmpty)
-                        _buildDetailRow('Khách hàng:', order.customerName),
-                      if (order.customerPhone.isNotEmpty)
-                        _buildDetailRow('Số điện thoại:', order.customerPhone),
+                            if (order.customer.name.isNotEmpty)
+        _buildDetailRow('Khách hàng:', order.customer.displayName),
+      if (order.customer.phone.isNotEmpty)
+        _buildDetailRow('Số điện thoại:', order.customer.phone),
                       if (order.note.isNotEmpty)
                         _buildDetailRow('Ghi chú:', order.note),
                       
-                      const SizedBox(height: AppStyles.spacingL),
-                      Text(
-                        'Sản phẩm trong đơn:',
+                      const SizedBox(height: AppStyles.spacingM),  
+                      Text( 
+                        'Sản phẩm trong đơn:',  
                         style: AppStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: AppStyles.spacingM),
-                      
-                      ...order.items.map((item) => Container(
-                        margin: const EdgeInsets.only(bottom: AppStyles.spacingS),
-                        padding: const EdgeInsets.all(AppStyles.spacingM),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundLight,
-                          borderRadius: BorderRadius.circular(AppStyles.radiusM),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.productName,
-                                    style: AppStyles.bodyMedium.copyWith(
-                                      fontWeight: FontWeight.w600,
+                       
+                      if (order.items.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(AppStyles.spacingL), 
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundLight,
+                            borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                            border: Border.all(color: AppColors.borderLight),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.shopping_cart_outlined,
+                                color: AppColors.textSecondary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppStyles.spacingS),
+                              Text(
+                                'Chưa có sản phẩm nào',
+                                style: AppStyles.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ...order.items.map((item) => Container(
+                          margin: const EdgeInsets.only(bottom: AppStyles.spacingS),
+                          padding: const EdgeInsets.all(AppStyles.spacingM),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundLight,
+                            borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.productName,
+                                      style: AppStyles.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  FormatUtils.formatCurrency(item.lineTotal),
-                                  style: AppStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.successColor,
+                                  Text(
+                                    FormatUtils.formatCurrency(item.lineTotal),
+                                    style: AppStyles.bodyMedium.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.successColor,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppStyles.spacingXS),
-                            Row(
-                              children: [
-                                Text('${item.quantity} ${item.unit}'),
-                                const Text(' × '),
-                                Text('${FormatUtils.formatCurrency(item.unitPrice)} VNĐ'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      )).toList(),
+                                ],
+                              ),
+                              const SizedBox(height: AppStyles.spacingXS),
+                              Row(
+                                children: [
+                                  Text('${item.quantity} ${item.unit}'),
+                                  const Text(' × '),
+                                  Text('${FormatUtils.formatCurrency(item.unitPrice)} VNĐ'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )).toList(),
                       
                       const SizedBox(height: AppStyles.spacingM),
                       const Divider(),
                       
-                      _buildSummaryRow('Tổng tiền hàng:', order.subtotal),
-                      if (order.discount > 0)
-                        _buildSummaryRow('Giảm giá:', -order.discount),
-                      if (order.tax > 0)
-                        _buildSummaryRow('Thuế:', order.tax),
-                      const Divider(),
-                      _buildSummaryRow('Tổng cộng:', order.total, isTotal: true),
-                      if (order.status == OrderStatus.paid)
-                        _buildSummaryRow('Lợi nhuận:', order.profit, 
-                          color: order.profit >= 0 ? AppColors.successColor : AppColors.errorColor),
+                      if (order.items.isNotEmpty) ...[
+                        _buildSummaryRow('Tổng tiền hàng:', order.subtotal),
+                        if (order.discount > 0)
+                          _buildSummaryRow('Giảm giá:', -order.discount),
+                        if (order.tax > 0)
+                          _buildSummaryRow('Thuế:', order.tax),
+                        const Divider(),    
+                        _buildSummaryRow('Tổng cộng:', order.total, isTotal: true),
+                        if (order.status == OrderStatus.paid)
+                          _buildSummaryRow('Lợi nhuận:', order.profit, 
+                            color: order.profit >= 0 ? AppColors.successColor : AppColors.errorColor),
+                      ] else ...[
+                        _buildSummaryRow('Tổng tiền hàng:', 0),
+                        _buildSummaryRow('Giảm giá:', 0),
+                        _buildSummaryRow('Thuế:', 0),
+                        const Divider(),
+                        _buildSummaryRow('Tổng cộng:', 0, isTotal: true),
+                        Container(
+                          padding: const EdgeInsets.all(AppStyles.spacingM),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundLight,
+                            borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                            border: Border.all(color: AppColors.borderLight),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: AppColors.warningColor,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppStyles.spacingS),
+                              Expanded(
+                                child: Text(
+                                  'Đơn hàng chưa có sản phẩm. Vui lòng thêm sản phẩm để tính toán.',
+                                  style: AppStyles.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -350,29 +409,21 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
   }
 
   void _editOrder(Order order) async {
-    final result = await Navigator.push(
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => OrderFormScreen(order: order),
       ),
     );
-    
-    if (result == true) {
-      await _loadOrders();
-    }
   }
 
   void _addOrder() async {
-    final result = await Navigator.push(
+    Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const OrderFormScreen(),
       ),
     );
-    
-    if (result == true) {
-      await _loadOrders();
-    }
   }
 
   Widget _buildFilterChips() {
@@ -674,20 +725,20 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
                 const SizedBox(height: AppStyles.spacingM),
                 
                 // Customer info
-                if (order.customerName.isNotEmpty) ...[
+                if (order.customer.name.isNotEmpty) ...[
                   Row(
                     children: [
                       Icon(Icons.person, size: 16, color: AppColors.textSecondary),
                       const SizedBox(width: AppStyles.spacingXS),
                       Expanded(
                         child: Text(
-                          order.customerName,
+                          order.customer.displayName,
                           style: AppStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
                         ),
                       ),
-                      if (order.customerPhone.isNotEmpty)
+                      if (order.customer.phone.isNotEmpty)
                         Text(
-                          order.customerPhone,
+                          order.customer.phone,
                           style: AppStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                         ),
                     ],
@@ -696,54 +747,111 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
                 ],
                 
                 // Order summary
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildOrderInfoItem(
-                        'Sản phẩm',
-                        '${order.totalItems} loại',
-                        AppColors.infoColor,
-                        Icons.inventory,
+                if (order.items.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildOrderInfoItem(
+                          'Sản phẩm',
+                          '${order.totalItems} loại',
+                          AppColors.infoColor,
+                          Icons.inventory,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppStyles.spacingM),
-                    Expanded(
-                      child: _buildOrderInfoItem(
-                        'Số lượng',
-                        '${order.totalQuantity}',
-                        AppColors.warningColor,
-                        Icons.shopping_cart,
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: AppStyles.spacingM),
-                
-                // Total and profit
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildOrderInfoItem(
-                        'Tổng tiền',
-                        '${FormatUtils.formatCurrency(order.total)} VNĐ',
-                        AppColors.successColor,
-                        Icons.attach_money,
-                      ),
-                    ),
-                    if (order.status == OrderStatus.paid) ...[
                       const SizedBox(width: AppStyles.spacingM),
                       Expanded(
                         child: _buildOrderInfoItem(
-                          'Lợi nhuận',
-                          '${FormatUtils.formatCurrency(order.profit)} VNĐ',
-                          order.profit >= 0 ? AppColors.successColor : AppColors.errorColor,
-                          order.profit >= 0 ? Icons.trending_up : Icons.trending_down,
+                          'Số lượng',
+                          '${order.totalQuantity}',
+                          AppColors.warningColor,
+                          Icons.shopping_cart,
                         ),
                       ),
                     ],
-                  ],
-                ),
+                  ),
+                  
+                  const SizedBox(height: AppStyles.spacingM),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingS),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundLight,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.warningColor,
+                          size: 16,
+                        ),
+                        const SizedBox(width: AppStyles.spacingS),
+                        Text(
+                          'Đơn hàng chưa có sản phẩm',
+                          style: AppStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppStyles.spacingM),
+                ],
+                
+                // Total and profit
+                if (order.items.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildOrderInfoItem(
+                          'Tổng tiền',
+                          '${FormatUtils.formatCurrency(order.total)} VNĐ',
+                          AppColors.successColor,
+                          Icons.attach_money,
+                        ),
+                      ),
+                      if (order.status == OrderStatus.paid) ...[
+                        const SizedBox(width: AppStyles.spacingM),
+                        Expanded(
+                          child: _buildOrderInfoItem(
+                            'Lợi nhuận',
+                            '${FormatUtils.formatCurrency(order.profit)} VNĐ',
+                            order.profit >= 0 ? AppColors.successColor : AppColors.errorColor,
+                            order.profit >= 0 ? Icons.trending_up : Icons.trending_down,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ] else ...[
+                  Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingS),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundLight,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.attach_money,
+                          color: AppColors.textSecondary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: AppStyles.spacingS),
+                        Text(
+                          'Tổng tiền: 0 VNĐ',
+                          style: AppStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 
                 // Note
                 if (order.note.isNotEmpty) ...[
@@ -882,23 +990,15 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản lý hóa đơn'),
+        title: const Text('Danh sách đơn hàng'),
         backgroundColor: AppColors.mainColor,
         foregroundColor: AppColors.textOnMain,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addOrder,
-            tooltip: 'Tạo đơn hàng mới',
-          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
               switch (value) {
-                case 'create_order':
-                  _addOrder();
-                  break;
                 case 'refresh':
                   _loadOrders();
                   break;
@@ -911,16 +1011,7 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'create_order',
-                child: Row(
-                  children: [
-                    Icon(Icons.add),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Tạo đơn hàng mới'),
-                  ],
-                ),
-              ),
+
               const PopupMenuItem(
                 value: 'refresh',
                 child: Row(
@@ -1013,15 +1104,16 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
                           },
                         ),
             ),
-          ],
+          ], 
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addOrder,
-        backgroundColor: AppColors.mainColor,
-        foregroundColor: AppColors.textOnMain,
-        child: const Icon(Icons.add),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _addOrder,
+      //   backgroundColor: AppColors.mainColor,
+      //   foregroundColor: AppColors.textOnMain,
+      //   child: const Icon(Icons.add),
+      //   tooltip: 'Tạo đơn hàng mới',
+      // ),
     );
   }
 }

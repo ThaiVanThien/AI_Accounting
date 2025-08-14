@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/order.dart';
 import '../models/product.dart';
+import '../models/customer.dart';
 import 'product_service.dart';
+import 'customer_service.dart';
 
 class OrderService {
   static const String _ordersKey = 'orders';
@@ -20,6 +22,7 @@ class OrderService {
   int _orderSequence = 1;
   bool _isInitialized = false;
   final ProductService _productService = ProductService();
+  final CustomerService _customerService = CustomerService();
 
   // Initialize
   Future<bool> init() async {
@@ -27,6 +30,7 @@ class OrderService {
     
     try {
       _prefs = await SharedPreferences.getInstance();
+      await _customerService.init();
       await _loadOrders();
       _nextId = _prefs?.getInt(_nextOrderIdKey) ?? 1;
       _orderSequence = _prefs?.getInt(_orderSequenceKey) ?? 1;
@@ -45,10 +49,9 @@ class OrderService {
       final String? ordersJson = _prefs?.getString(_ordersKey);
       if (ordersJson == null || ordersJson.isEmpty) {
         _orders = [];
-        // Chỉ tạo dữ liệu mẫu khi thực sự cần
         return;
       }
-
+      
       final List<dynamic> ordersList = jsonDecode(ordersJson);
       _orders = ordersList.map((json) => Order.fromJson(json)).toList();
     } catch (e) {
@@ -74,13 +77,8 @@ class OrderService {
   Future<List<Order>> getOrders() async {
     if (!await init()) return [];
     
-    // Tạo dữ liệu mẫu nếu danh sách trống (chỉ khi có sản phẩm)
-    if (_orders.isEmpty) {
-      final products = await _productService.getProducts();
-      if (products.isNotEmpty) {
-        await _createSampleOrders();
-      }
-    }
+    // Luôn reload từ storage để đảm bảo có dữ liệu mới nhất
+    await _loadOrders();
     
     return List.from(_orders);
   }
@@ -88,10 +86,10 @@ class OrderService {
   // Get orders by status
   Future<List<Order>> getOrdersByStatus(OrderStatus status) async {
     final orders = await getOrders();
-    return orders.where((o) => o.status == status).toList();
+    return orders.where((o) => o.status == status).toList(); 
   }
 
-  // Get orders by date range
+  // Get orders by date range 
   Future<List<Order>> getOrdersByDateRange(DateTime startDate, DateTime endDate) async {
     final orders = await getOrders();
     return orders.where((order) {
@@ -137,8 +135,8 @@ class OrderService {
     
     return orders.where((order) {
       return order.orderNumber.toLowerCase().contains(searchQuery) ||
-             order.customerName.toLowerCase().contains(searchQuery) ||
-             order.customerPhone.contains(searchQuery) ||
+             order.customer.name.toLowerCase().contains(searchQuery) ||
+             order.customer.phone.contains(searchQuery) ||
              order.note.toLowerCase().contains(searchQuery) ||
              order.items.any((item) => 
                item.productName.toLowerCase().contains(searchQuery) ||
@@ -152,8 +150,8 @@ class OrderService {
     if (!await init()) return false;
     
     try {
-      // Tạo ID và số đơn hàng mới
-      final orderNumber = order.orderNumber.isEmpty 
+      
+      final orderNumber = order.orderNumber.isEmpty
           ? Order.generateOrderNumber(order.orderDate, _orderSequence)
           : order.orderNumber;
           
@@ -171,8 +169,7 @@ class OrderService {
         await _prefs?.setInt(_nextOrderIdKey, _nextId);
         await _prefs?.setInt(_orderSequenceKey, _orderSequence);
         
-        // Cập nhật tồn kho nếu đơn hàng đã thanh toán
-        if (newOrder.status == OrderStatus.paid) {
+        if (newOrder.status != OrderStatus.draft) {
           await _updateStockForOrder(newOrder, false); // reduce stock
         }
         
@@ -203,7 +200,7 @@ class OrderService {
       _orders[index] = updatedOrder;
       
       final success = await _saveOrders();
-      if (!success) {
+      if (!success) { 
         // Rollback
         _orders[index] = oldOrder;
         return false;
@@ -260,24 +257,45 @@ class OrderService {
 
   // Handle stock update when order status changes
   Future<void> _handleStockUpdateOnStatusChange(Order oldOrder, Order newOrder) async {
-    // Nếu chuyển từ chưa thanh toán sang đã thanh toán -> giảm tồn kho
-    if (oldOrder.status != OrderStatus.paid && newOrder.status == OrderStatus.paid) {
-      await _updateStockForOrder(newOrder, false); // reduce stock
-    }
-    // Nếu chuyển từ đã thanh toán sang chưa thanh toán -> tăng tồn kho
-    else if (oldOrder.status == OrderStatus.paid && newOrder.status != OrderStatus.paid) {
-      await _updateStockForOrder(oldOrder, true); // increase stock
+    try {
+      // Nếu chuyển từ draft sang confirmed/paid -> giảm tồn kho
+      if (oldOrder.status == OrderStatus.draft && 
+          (newOrder.status == OrderStatus.confirmed || newOrder.status == OrderStatus.paid)) {
+        await _updateStockForOrder(newOrder, false); // reduce stock
+      }
+      // Nếu chuyển từ confirmed sang paid -> không cần thay đổi tồn kho (đã giảm rồi)
+      // Nếu chuyển từ confirmed/paid sang draft -> tăng tồn kho (hoàn trả)
+      else if ((oldOrder.status == OrderStatus.confirmed || oldOrder.status == OrderStatus.paid) && 
+               newOrder.status == OrderStatus.draft) {
+        await _updateStockForOrder(oldOrder, true); // increase stock
+      }
+      // Nếu chuyển từ paid sang cancelled -> tăng tồn kho (hoàn trả)
+      else if (oldOrder.status == OrderStatus.paid && newOrder.status == OrderStatus.cancelled) {
+        await _updateStockForOrder(oldOrder, true); // increase stock
+      }
+      // Nếu chuyển từ cancelled sang confirmed/paid -> giảm tồn kho
+      else if (oldOrder.status == OrderStatus.cancelled && 
+               (newOrder.status == OrderStatus.confirmed || newOrder.status == OrderStatus.paid)) {
+        await _updateStockForOrder(newOrder, false); // reduce stock
+      }
+    } catch (e) {
+      print('Error handling stock update on status change: $e');
     }
   }
 
   // Update stock for order items
   Future<void> _updateStockForOrder(Order order, bool increase) async {
-    for (final item in order.items) {
-      if (increase) {
-        await _productService.increaseStock(item.productId, item.quantity);
-      } else {
-        await _productService.reduceStock(item.productId, item.quantity);
+    try {
+      for (final item in order.items) {
+        if (increase) {
+          await _productService.increaseStock(item.productId, item.quantity);
+        } else {
+          await _productService.reduceStock(item.productId, item.quantity);
+        }
       }
+    } catch (e) {
+      print('Error updating stock for order: $e');
+      // Không throw error để không làm crash app
     }
   }
 
@@ -401,43 +419,6 @@ class OrderService {
   Future<String> getNextOrderNumber({DateTime? date}) async {
     if (!await init()) return Order.generateOrderNumber(DateTime.now(), 1);
     return Order.generateOrderNumber(date ?? DateTime.now(), _orderSequence);
-  }
-
-  // Create sample orders - minimal data
-  Future<void> _createSampleOrders() async {
-    try {
-      await _productService.init();
-      final products = await _productService.getProducts();
-      
-      if (products.isEmpty) return;
-      
-      // Chỉ tạo 1 đơn hàng mẫu để tiết kiệm memory
-      _orders = [
-        Order(
-          id: '1',
-          orderNumber: Order.generateOrderNumber(DateTime.now(), 1),
-          orderDate: DateTime.now(),
-          status: OrderStatus.draft,
-          customerName: 'Khách hàng mẫu',
-          customerPhone: '',
-          items: [
-            OrderItem.fromProduct(products[0], 1),
-          ],
-          note: 'Đơn hàng demo',
-        ),
-      ];
-
-      _nextId = 2;
-      _orderSequence = 2;
-      await _saveOrders();
-      await _prefs?.setInt(_nextOrderIdKey, _nextId);
-      await _prefs?.setInt(_orderSequenceKey, _orderSequence);
-    } catch (e) {
-      print('Error creating sample orders: $e');
-      _orders = [];
-      _nextId = 1;
-      _orderSequence = 1;
-    }
   }
 
   // Validate order before saving

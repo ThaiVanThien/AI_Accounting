@@ -615,18 +615,10 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
         foregroundColor: AppColors.textOnMain,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addProduct,
-            tooltip: 'Thêm sản phẩm mới',
-          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
               switch (value) {
-                case 'add_product':
-                  _addProduct();
-                  break;
                 case 'refresh':
                   _loadProducts();
                   break;
@@ -639,16 +631,6 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'add_product',
-                child: Row(
-                  children: [
-                    Icon(Icons.add),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Thêm sản phẩm mới'),
-                  ],
-                ),
-              ),
               const PopupMenuItem(
                 value: 'refresh',
                 child: Row(

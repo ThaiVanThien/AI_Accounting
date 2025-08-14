@@ -9,6 +9,8 @@ import 'screens/order_form_screen.dart';
 import 'screens/ai_input_screen.dart';
 import 'screens/report_screen.dart';
 import 'screens/order_list_screen.dart';
+import 'screens/customer_list_screen.dart';
+import 'screens/home_screen.dart';
 import 'services/shop_service.dart';
 import 'services/storage_manager.dart';
 import 'models/finance_record.dart';
@@ -362,13 +364,14 @@ class _MainScreenState extends State<MainScreen> with CommonScreenMixin {
   void _initializeScreens() {
     _screens.clear();
     _screens.addAll([
-      OrderFormScreen(), // Thay đổi từ OrderListScreen thành OrderFormScreen
-      AIInputScreen(
+      const HomeScreen(), // 0: Trang chủ
+      const OrderFormScreen(), // 1: Tạo hóa đơn
+      AIInputScreen( // 2: AI Chat
         onAddRecord: _addRecord,
         records: _records,
       ),
-      ReportScreen(), // Không cần truyền records nữa
-      ProductListScreen(),
+      const ReportScreen(), // 3: Báo cáo
+      const ProductListScreen(), // 4: Sản phẩm
     ]);
   }
 
@@ -599,6 +602,17 @@ class _MainScreenState extends State<MainScreen> with CommonScreenMixin {
               fontSize: 12,
             ),
             items: [
+              const BottomNavigationBarItem(
+                icon: Padding(
+                  padding: EdgeInsets.only(bottom: 4),
+                  child: Icon(Icons.home_outlined, size: 26),
+                ),
+                activeIcon: Padding(
+                  padding: EdgeInsets.only(bottom: 4),
+                  child: Icon(Icons.home, size: 26),
+                ),
+                label: 'Trang chủ',
+              ),
               BottomNavigationBarItem(
                 icon: const Padding(
                   padding: EdgeInsets.only(bottom: 4),

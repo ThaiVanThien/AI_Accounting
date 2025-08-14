@@ -1,4 +1,5 @@
 import 'product.dart';
+import 'customer.dart';
 
 enum OrderStatus {
   draft, // mới tạo
@@ -140,8 +141,7 @@ class Order {
   final DateTime orderDate;
   final OrderStatus status;
   final List<OrderItem> items;
-  final String customerName;
-  final String customerPhone;
+  final Customer customer;
   final String note;
   final double discount; // giảm giá
   final double tax; // thuế
@@ -154,21 +154,21 @@ class Order {
     required this.orderDate,
     this.status = OrderStatus.draft,
     this.items = const [],
-    this.customerName = '',
-    this.customerPhone = '',
+    Customer? customer,
     this.note = '',
     this.discount = 0,
     this.tax = 0,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) : createdAt = createdAt ?? DateTime.now(),
+  }) : customer = customer ?? Customer.walkIn(),
+       createdAt = createdAt ?? DateTime.now(),
        updatedAt = updatedAt ?? DateTime.now();
 
   // Tính tổng tiền hàng (trước giảm giá và thuế)
   double get subtotal => items.fold(0, (sum, item) => sum + item.lineTotal);
 
   // Tính tổng giá vốn
-  double get totalCost => items.fold(0, (sum, item) => sum + item.lineCostTotal);
+  double get totalCost => items.fold(0, (sum , item) => sum + item.lineCostTotal);
 
   // Tính tổng tiền sau giảm giá và thuế
   double get total => subtotal - discount + tax;
@@ -193,8 +193,7 @@ class Order {
       'orderDate': orderDate.toIso8601String(),
       'status': status.name,
       'items': items.map((item) => item.toJson()).toList(),
-      'customerName': customerName,
-      'customerPhone': customerPhone,
+      'customer': customer.toJson(),
       'note': note,
       'discount': discount,
       'tax': tax,
@@ -215,8 +214,9 @@ class Order {
       items: (json['items'] as List<dynamic>? ?? [])
           .map((item) => OrderItem.fromJson(item))
           .toList(),
-      customerName: json['customerName'] ?? '',
-      customerPhone: json['customerPhone'] ?? '',
+      customer: json['customer'] != null 
+          ? Customer.fromJson(json['customer'])
+          : Customer.walkIn(),
       note: json['note'] ?? '',
       discount: (json['discount'] ?? 0).toDouble(),
       tax: (json['tax'] ?? 0).toDouble(),
@@ -232,8 +232,7 @@ class Order {
     DateTime? orderDate,
     OrderStatus? status,
     List<OrderItem>? items,
-    String? customerName,
-    String? customerPhone,
+    Customer? customer,
     String? note,
     double? discount,
     double? tax,
@@ -246,8 +245,7 @@ class Order {
       orderDate: orderDate ?? this.orderDate,
       status: status ?? this.status,
       items: items ?? this.items,
-      customerName: customerName ?? this.customerName,
-      customerPhone: customerPhone ?? this.customerPhone,
+      customer: customer ?? this.customer,
       note: note ?? this.note,
       discount: discount ?? this.discount,
       tax: tax ?? this.tax,
