@@ -145,82 +145,145 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(product.name),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDetailRow('Mã sản phẩm:', product.code),
-              _buildDetailRow('Giá bán:', '${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ'),
-              _buildDetailRow('Giá vốn:', '${FormatUtils.formatCurrency(product.costPrice)} VNĐ'),
-              _buildDetailRow('Lợi nhuận:', '${FormatUtils.formatCurrency(product.profitPerUnit)} VNĐ (${product.profitMargin.toStringAsFixed(1)}%)'),
-              _buildDetailRow('Đơn vị:', product.unit),
-              _buildDetailRow('Nhóm hàng:', product.category.isEmpty ? 'Chưa phân loại' : product.category),
-              _buildDetailRow('Tồn kho:', '${product.stockQuantity} ${product.unit}'),
-              _buildDetailRow('Tồn kho tối thiểu:', '${product.minStockLevel} ${product.unit}'),
-              _buildDetailRow('Giá trị tồn kho:', '${FormatUtils.formatCurrency(product.stockValue)} VNĐ'),
-              _buildDetailRow('Trạng thái:', product.isActive ? 'Đang bán' : 'Ngừng bán'),
-              if (product.description.isNotEmpty)
-                _buildDetailRow('Mô tả:', product.description),
-              if (product.isLowStock)
-                Container(
-                  margin: const EdgeInsets.only(top: AppStyles.spacingM),
-                  padding: const EdgeInsets.all(AppStyles.spacingS),
-                  decoration: BoxDecoration(
-                    color: AppColors.warningColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppStyles.radiusS),
-                    border: Border.all(color: AppColors.warningColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.warning, color: AppColors.warningColor, size: 16),
-                      const SizedBox(width: AppStyles.spacingXS),
-                      const Text(
-                        'Cảnh báo: Tồn kho thấp',
-                        style: TextStyle(
-                          color: AppColors.warningColor,
-                          fontWeight: FontWeight.w600,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+        contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+        backgroundColor: Colors.white,
+        title: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                child: Row(
+                  children: [
+                    Icon(Icons.inventory_2, color: AppColors.mainColorDark, size: 24),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        product.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.close, size: 20, color: Colors.grey),
+                    ),
+                  ],
                 ),
-            ],
+              ),
+            ),
+            Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
+          ],
+        ),
+
+        content: Container(
+          width: 500,
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailRow(Icons.confirmation_number, 'Mã sản phẩm:', product.code),
+                  _buildDetailRow(Icons.sell, 'Giá bán:', '${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ'),
+                  _buildDetailRow(Icons.attach_money, 'Giá vốn:', '${FormatUtils.formatCurrency(product.costPrice)} VNĐ'),
+                  _buildDetailRow(Icons.trending_up, 'Lợi nhuận:',
+                      '${FormatUtils.formatCurrency(product.profitPerUnit)} VNĐ (${product.profitMargin.toStringAsFixed(1)}%)'),
+                  const Divider(),
+                  _buildDetailRow(Icons.straighten, 'Đơn vị:', product.unit),
+                  _buildDetailRow(Icons.category, 'Nhóm hàng:', product.category.isEmpty ? 'Chưa phân loại' : product.category),
+                  const Divider(),
+                  _buildDetailRow(Icons.inventory, 'Tồn kho:', '${product.stockQuantity} ${product.unit}'),
+                  _buildDetailRow(Icons.warning_amber, 'Tồn kho tối thiểu:', '${product.minStockLevel} ${product.unit}'),
+                  _buildDetailRow(Icons.account_balance_wallet, 'Giá trị tồn kho:', '${FormatUtils.formatCurrency(product.stockValue)} VNĐ'),
+                  const Divider(),
+                  _buildDetailRow(Icons.check_circle, 'Trạng thái:', product.isActive ? 'Đang bán' : 'Ngừng bán'),
+                  if (product.description.isNotEmpty)
+                    _buildDetailRow(Icons.notes, 'Mô tả:', product.description),
+                  if (product.isLowStock)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.orange, size: 22),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Cảnh báo: Tồn kho thấp',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
         actions: [
-          TextButton(
+          /*TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Đóng'),
-          ),
+          ),*/
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _editProduct(product);
             },
-            child: const Text('Sửa'),
+            child: const Icon(Icons.edit),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, color: Colors.grey.shade600, size: 18),
+          const SizedBox(width: 8),
           SizedBox(
-            width: 120,
+            width: 140,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+                fontSize: 14,
+              ),
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14),
+            ),
           ),
         ],
       ),
@@ -615,54 +678,118 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
         foregroundColor: AppColors.textOnMain,
         elevation: 0,
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'refresh':
-                  _loadProducts();
-                  break;
-                case 'shop_info':
-                  showShopInfo();
-                  break;
-                case 'logout':
-                  logout();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'refresh',
-                child: Row(
-                  children: [
-                    Icon(Icons.refresh),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Làm mới'),
-                  ],
+          Theme(
+            data: Theme.of(context).copyWith(
+              popupMenuTheme: PopupMenuThemeData(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const PopupMenuItem(
-                value: 'shop_info',
-                child: Row(
-                  children: [
-                    Icon(Icons.store),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Thông tin cửa hàng'),
-                  ],
+            ),
+            child: PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                switch (value) {
+                  case 'refresh':
+                    _loadProducts();
+                    break;
+                  case 'shop_info':
+                    showShopInfo();
+                    break;
+                  case 'logout':
+                    logout();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                // Thông tin cửa hàng
+                PopupMenuItem(
+                  value: 'shop_info',
+                  child: Row(
+                    children: [
+                      Icon(Icons.store, color: Colors.grey),
+                      SizedBox(width: AppStyles.spacingS),
+                      Flexible(
+                        child: Text(
+                          'Thông tin cửa hàng',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: AppColors.errorColor),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
-                  ],
+                PopupMenuItem(
+                  enabled: false,
+                  height: 0,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    height: 1,
+                    color: Colors.grey.shade300,
+                  ),
                 ),
-              ),
-            ],
-          ),
+                // Làm mới
+                PopupMenuItem(
+                  value: 'refresh',
+                  child: Row(
+                    children: [
+                      Icon(Icons.refresh, color: Colors.grey),
+                      SizedBox(width: AppStyles.spacingS),
+                      Flexible(
+                        child: Text(
+                          'Làm mới',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+
+
+
+                // Divider mảnh custom
+                PopupMenuItem(
+                  enabled: false,
+                  height: 0,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    height: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                ),
+
+                // Đăng xuất
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: AppColors.errorColor),
+                      SizedBox(width: AppStyles.spacingS),
+                      Flexible(
+                        child: Text(
+                          'Đăng xuất',
+                          style: TextStyle(
+                            color: AppColors.errorColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+
         ],
       ),
       body: Container(
@@ -700,28 +827,28 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
                 ),
               ),
             ),
-            
+
             // Filters
             _buildFilterChips(),
-            
+
             const SizedBox(height: AppStyles.spacingS),
-            
+
             // Product list
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
-                      ),
-                    )
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
+                ),
+              )
                   : _filteredProducts.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          itemCount: _filteredProducts.length,
-                          itemBuilder: (context, index) {
-                            return _buildProductCard(_filteredProducts[index]);
-                          },
-                        ),
+                  ? _buildEmptyState()
+                  : ListView.builder(
+                itemCount: _filteredProducts.length,
+                itemBuilder: (context, index) {
+                  return _buildProductCard(_filteredProducts[index]);
+                },
+              ),
             ),
           ],
         ),

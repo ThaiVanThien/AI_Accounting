@@ -317,9 +317,33 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              title: Text(
-                                customer.displayName,
-                                style: AppStyles.bodyMedium,
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      customer.displayName,
+                                      style: AppStyles.bodyLarge,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: customer.isActive ? Colors.green : Colors.red,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        customer.isActive ? 'Hoạt động' : 'Không hoạt động',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,21 +356,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                     Text('Địa chỉ: ${customer.address}'),
                                   if (customer.note.isNotEmpty)
                                     Text('Ghi chú: ${customer.note}'),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: customer.isActive ? Colors.green : Colors.red,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      customer.isActive ? 'Hoạt động' : 'Không hoạt động',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
+
                                 ],
                               ),
                               trailing: PopupMenuButton<String>(

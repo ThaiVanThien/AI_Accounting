@@ -210,46 +210,87 @@ mixin CommonScreenMixin<T extends StatefulWidget> on State<T> {
     if (shopInfo != null && mounted) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.store, color: AppColors.mainColor),
-              SizedBox(width: AppStyles.spacingS),
-              Text('Thông tin cửa hàng'),
-            ],
-          ),
-          content: SingleChildScrollView(
+        builder: (context) => Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420, maxHeight: 350),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInfoRow('Tên cửa hàng:', shopInfo.name),
-                _buildInfoRow('Địa chỉ:', shopInfo.address),
-                _buildInfoRow('Số điện thoại:', shopInfo.phone),
-                if (shopInfo.email.isNotEmpty)
-                  _buildInfoRow('Email:', shopInfo.email),
-                _buildInfoRow('Loại hình KD:', shopInfo.businessType),
-                if (shopInfo.ownerName.isNotEmpty)
-                  _buildInfoRow('Chủ cửa hàng:', shopInfo.ownerName),
-                if (shopInfo.taxCode.isNotEmpty)
-                  _buildInfoRow('Mã số thuế:', shopInfo.taxCode),
+                // HEADER với background nhẹ để tách biệt
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.store, color: AppColors.mainColor, size: 26),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'Thông tin cửa hàng',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      // nút đóng nhỏ ở góc
+                      InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => Navigator.pop(context),
+                        child: const Padding(
+                          padding: EdgeInsets.all(6.0),
+                          child: Icon(Icons.close, color: Colors.grey, size: 20),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Divider mảnh
+                Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
+
+                // Nội dung (cuộn được)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          // Dùng _infoRow (dưới) để hiển thị từng dòng
+                          _buildInfoRow('Tên cửa hàng:', shopInfo.name),
+                          _buildInfoRow('Địa chỉ:', shopInfo.address),
+                          _buildInfoRow('Số điện thoại:', shopInfo.phone),
+                          if (shopInfo.email.isNotEmpty) _buildInfoRow('Email:', shopInfo.email),
+                          _buildInfoRow('Loại hình KD:', shopInfo.businessType),
+                          if (shopInfo.ownerName.isNotEmpty) _buildInfoRow('Chủ cửa hàng:', shopInfo.ownerName),
+                          if (shopInfo.taxCode.isNotEmpty) _buildInfoRow('Mã số thuế:', shopInfo.taxCode),
+
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // FOOTER: nút Đóng nằm góc phải, có margin để không sát viền
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Đóng'),
-            ),
-          ],
         ),
       );
     }
   }
 
+// hàm con hiển thị 1 dòng label/value
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -257,11 +298,21 @@ mixin CommonScreenMixin<T extends StatefulWidget> on State<T> {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
           ),
         ],
       ),
