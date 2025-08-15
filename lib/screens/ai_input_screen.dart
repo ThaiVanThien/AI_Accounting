@@ -75,9 +75,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                 color: AppColors.infoColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: const Icon(  
                 Icons.mic,
-                color: AppColors.infoColor,
+                color: AppColors.infoColor, 
                 size: 24,
               ),
             ),
@@ -200,12 +200,16 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         await _showSaveConfirmationDialog(record);
       }
       
-      // Nếu là order thành công, hiển thị dialog tạo đơn hàng
+      // Nếu là order preview thành công, hiển thị popup xác nhận
       if (aiResponse.type == 'order' &&
           aiResponse.metadata != null &&
-          aiResponse.metadata!['success'] == true) {
-        final orderData = aiResponse.metadata!['order_data'];
-        await _showOrderConfirmationDialog(orderData);
+          aiResponse.metadata!['order_preview'] == true &&
+          aiResponse.metadata!['dialog_data'] != null) {
+        final dialogData = aiResponse.metadata!['dialog_data'] as Map<String, dynamic>?;
+        final previewData = aiResponse.metadata!['preview_data'] as Map<String, dynamic>?;
+        if (dialogData != null && previewData != null) {
+          await _showOrderConfirmationDialog(dialogData, previewData);
+        }
       }
     } catch (e) {
       print('Error sending message: $e');
@@ -1068,10 +1072,11 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
   }
 
-  Future<void> _showOrderConfirmationDialog(Map<String, dynamic> orderData) async {
-    final items = orderData["items"] as List<Map<String, dynamic>>;
-    final customerName = orderData["customer_name"] as String;
-    final note = orderData["note"] as String;
+  Future<void> _showOrderConfirmationDialog(Map<String, dynamic> dialogData, Map<String, dynamic> previewData) async {
+    final title = dialogData["title"] as String? ?? "Xác nhận";
+    final content = dialogData["content"] as String? ?? "";
+    final positiveButton = dialogData["positive_button"] as String? ?? "Đồng ý";
+    final negativeButton = dialogData["negative_button"] as String? ?? "Hủy";
     
     final confirm = await showDialog<bool>(
       context: context,
@@ -1092,150 +1097,44 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               ),
             ),
             const SizedBox(width: AppStyles.spacingM),
-            const Text('Tạo đơn hàng?'),
+            Text(title),
           ],
         ),
-        content: Container(
-          width: double.maxFinite,
-          constraints: const BoxConstraints(maxHeight: 400),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'AI đã phân tích và tạo đơn hàng sau:',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                content,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppStyles.spacingM),
+              Container(
+                padding: const EdgeInsets.all(AppStyles.spacingS),
+                decoration: BoxDecoration(
+                  color: AppColors.warningColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                  border: Border.all(color: AppColors.warningColor.withOpacity(0.3)),
+                ),
+                child: const Text(
+                  '⚠️ Vui lòng kiểm tra kỹ thông tin trước khi xác nhận tạo đơn hàng.',
                   style: TextStyle(
+                    color: AppColors.warningColor,
                     fontSize: 14,
-                    color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppStyles.spacingM),
-                
-                if (customerName.isNotEmpty) ...[
-                  Container(
-                    padding: const EdgeInsets.all(AppStyles.spacingM),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundCard,
-                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
-                      border: Border.all(color: AppColors.borderLight),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.person, size: 20, color: AppColors.infoColor),
-                        const SizedBox(width: AppStyles.spacingS),
-                        Text('Khách hàng: $customerName'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppStyles.spacingM),
-                ],
-                
-                Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingM),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundCard,
-                    borderRadius: BorderRadius.circular(AppStyles.radiusM),
-                    border: Border.all(color: AppColors.borderLight),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.list_alt, size: 20, color: AppColors.successColor),
-                          SizedBox(width: AppStyles.spacingS),
-                          Text('Sản phẩm:', style: TextStyle(fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                      const SizedBox(height: AppStyles.spacingS),
-                      
-                      ...items.map((item) {
-                        final product = item["product"];
-                        final quantity = item["quantity"];
-                        final matched = item["matched"];
-                        final originalName = item["original_name"];
-                        
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.all(AppStyles.spacingS),
-                          decoration: BoxDecoration(
-                            color: matched ? AppColors.successColor.withOpacity(0.1) : AppColors.warningColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppStyles.radiusS),
-                            border: Border.all(
-                              color: matched ? AppColors.successColor : AppColors.warningColor,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                matched ? Icons.check_circle : Icons.help_outline,
-                                size: 16,
-                                color: matched ? AppColors.successColor : AppColors.warningColor,
-                              ),
-                              const SizedBox(width: AppStyles.spacingS),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      matched ? product.name : originalName,
-                                      style: const TextStyle(fontWeight: FontWeight.w500),
-                                    ),
-                                    Text(
-                                      '$quantity ${matched ? product.unit : "đơn vị"}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (matched)
-                                Text(
-                                  '${FormatUtils.formatCurrency(quantity * product.sellingPrice)} VNĐ',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.successColor,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-                
-                if (note.isNotEmpty) ...[
-                  const SizedBox(height: AppStyles.spacingM),
-                  Container(
-                    padding: const EdgeInsets.all(AppStyles.spacingM),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundCard,
-                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
-                      border: Border.all(color: AppColors.borderLight),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.note, size: 20, color: AppColors.textSecondary),
-                        const SizedBox(width: AppStyles.spacingS),
-                        Expanded(child: Text('Ghi chú: $note')),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(negativeButton),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1243,14 +1142,57 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               backgroundColor: AppColors.successColor,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Tạo đơn hàng'),
+            child: Text(positiveButton),
           ),
         ],
       ),
     );
 
     if (confirm == true) {
-      await _createOrderFromData(orderData);
+      await _handleOrderConfirmation(true, previewData);
+    }
+  }
+
+  // Xử lý xác nhận đơn hàng qua AI Service
+  Future<void> _handleOrderConfirmation(bool confirmed, Map<String, dynamic> previewData) async {
+    try {
+      final aiResponse = await _aiService.handleOrderConfirmation(confirmed, previewData);
+      
+      setState(() {
+        _messages.add(aiResponse);
+      });
+      
+      // Cuộn xuống cuối
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+      
+      // Hiển thị snackbar thành công nếu tạo đơn hàng
+      if (confirmed && aiResponse.metadata?['order_created'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('✅ Đã tạo đơn hàng thành công!'),
+              backgroundColor: AppColors.successColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi xử lý đơn hàng: $e'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
     }
   }
 

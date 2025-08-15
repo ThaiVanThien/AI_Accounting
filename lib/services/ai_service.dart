@@ -5,9 +5,12 @@ import '../models/finance_record.dart';
 import '../models/chat_message.dart';
 import '../models/product.dart';
 import '../models/order.dart';
+import '../models/customer.dart';
 import '../utils/format_utils.dart';
 import 'storage_manager.dart';
 import 'product_service.dart';
+import 'customer_service.dart';
+import 'order_service.dart';
 
 class AIService {
   // API Keys từ Python.py
@@ -20,6 +23,15 @@ class AIService {
   
   final StorageManager _storageManager = StorageManager();
   final ProductService _productService = ProductService();
+  final CustomerService _customerService = CustomerService();
+  final OrderService _orderService = OrderService();
+
+  // Khởi tạo các service
+  Future<void> init() async {
+    await _productService.init();
+    await _customerService.init();
+    await _orderService.init();
+  }
 
   String _getPromptTypeInput(String userInput) {
     final now = DateTime.now();
@@ -95,7 +107,7 @@ class AIService {
       "note": ""
     }
     
-    Input: 'Khách hàng Anh Minh mua 5 bút bi, 3 gói mì tôm, ghi chú: khách VIP'
+    Input: 'Khách hàng Anh Minh mua 5 bút bi, 3 gói mì tôm, ghi chú: khách hang quen thuoc'
     Output: {
       "success": true,
       "items": [
@@ -191,33 +203,14 @@ class AIService {
         final matched = item["matched"] ?? false;
         
         Product? matchedProduct;
-        if (matched) {
-          // Find exact match
-          matchedProduct = products.firstWhere(
-            (p) => p.name.toLowerCase() == productName.toLowerCase(),
-            orElse: () => products.firstWhere(
-              (p) => p.name.toLowerCase().contains(productName.toLowerCase()) ||
-                     productName.toLowerCase().contains(p.name.toLowerCase()),
-              orElse: () => Product(
-                id: '',
-                code: '',
-                name: productName,
-                sellingPrice: 0,
-                costPrice: 0,
-                unit: unit,
-              ),
-            ),
-          );
-        } else {
-          // Try fuzzy matching
+        // Luôn thực hiện tìm kiếm, bỏ qua flag "matched" từ AI vì có thể không chính xác
           matchedProduct = _findBestProductMatch(productName, products);
-        }
         
         processedItems.add({
           "product": matchedProduct,
           "quantity": quantity,
           "original_name": productName,
-          "matched": matchedProduct?.id.isNotEmpty == true,
+          "matched": matchedProduct != null && matchedProduct.id.isNotEmpty,
         });
       }
       
@@ -234,39 +227,302 @@ class AIService {
   }
 
   Product? _findBestProductMatch(String searchName, List<Product> products) {
-    final searchLower = searchName.toLowerCase();
+    if (searchName.trim().isEmpty) return null;
     
-    // Exact match
+    final searchLower = searchName.toLowerCase().trim();
+    print('🔍 Tìm kiếm sản phẩm: "$searchName" -> "$searchLower"');
+    
+    // 1. Exact match (khớp chính xác)
     for (final product in products) {
       if (product.name.toLowerCase() == searchLower) {
+        print('✅ EXACT MATCH: "${product.name}"');
         return product;
       }
     }
     
-    // Contains match
-    for (final product in products) {
-      if (product.name.toLowerCase().contains(searchLower) ||
-          searchLower.contains(product.name.toLowerCase())) {
-        return product;
-      }
-    }
-    
-    // Keyword match
-    final searchWords = searchLower.split(' ');
+    // 2. Exact word match (khớp từ chính xác)
+    final searchWords = searchLower.split(' ').where((w) => w.length > 2).toList();
     for (final product in products) {
       final productWords = product.name.toLowerCase().split(' ');
+      for (final searchWord in searchWords) {
+        for (final productWord in productWords) {
+          if (searchWord == productWord && searchWord.length >= 3) {
+            print('✅ WORD MATCH: "${product.name}" (từ: "$searchWord")');
+            return product;
+          }
+        }
+      }
+    }
+    
+    // 3. Product name contains full search (chỉ 1 chiều)
+    for (final product in products) {
+      if (product.name.toLowerCase().contains(searchLower) && searchLower.length >= 3) {
+        print('✅ CONTAINS MATCH: "${product.name}" chứa "$searchLower"');
+        return product;
+      }
+    }
+    
+    // 4. Strict keyword match (tất cả từ quan trọng phải match)
+    if (searchWords.length >= 2) {
+      for (final product in products) {
+        final productWords = product.name.toLowerCase().split(' ');
+        int exactMatches = 0;
+        
+        for (final searchWord in searchWords) {
+          for (final productWord in productWords) {
+            if (searchWord == productWord || 
+                (searchWord.length >= 4 && productWord.contains(searchWord)) ||
+                (productWord.length >= 4 && searchWord.contains(productWord))) {
+              exactMatches++;
+              break;
+            }
+          }
+        }
+        
+        // Phải match ít nhất 80% và tối thiểu 2 từ
+        if (exactMatches >= 2 && exactMatches >= (searchWords.length * 0.8).ceil()) {
+          print('✅ KEYWORD MATCH: "${product.name}" ($exactMatches/${searchWords.length} từ)');
+          return product;
+        }
+      }
+    }
+    
+    print('❌ Không tìm thấy sản phẩm phù hợp cho: "$searchName"');
+    return null; // Không tìm thấy match hợp lệ
+  }
+
+  // Tìm khách hàng theo tên (fuzzy search)
+  Future<Customer> _findCustomerByName(String customerName) async {
+    if (customerName.trim().isEmpty) {
+      return Customer.walkIn();
+    }
+
+    final customers = await _customerService.getActiveCustomers();
+    final searchName = customerName.toLowerCase().trim();
+    
+    // Tìm khớp chính xác
+    for (final customer in customers) {
+      if (customer.name.toLowerCase() == searchName) {
+        return customer;
+      }
+    }
+    
+    // Tìm khớp một phần
+    for (final customer in customers) {
+      if (customer.name.toLowerCase().contains(searchName) ||
+          searchName.contains(customer.name.toLowerCase())) {
+        return customer;
+      }
+    }
+    
+    // Tìm theo từ khóa
+    final searchWords = searchName.split(' ');
+    for (final customer in customers) {
+      final customerWords = customer.name.toLowerCase().split(' ');
       int matchCount = 0;
       for (final word in searchWords) {
-        if (productWords.any((pw) => pw.contains(word) || word.contains(pw))) {
+        if (customerWords.any((cw) => cw.contains(word) || word.contains(cw))) {
           matchCount++;
         }
       }
       if (matchCount >= searchWords.length ~/ 2) {
-        return product;
+        return customer;
       }
     }
     
-    return null;
+    // Không tìm thấy - trả về khách lẻ với tên gợi ý
+    return Customer.walkIn().copyWith(name: customerName);
+  }
+
+  // Tạo đơn hàng thông minh từ dữ liệu AI
+  Future<Map<String, dynamic>> createSmartOrder(Map<String, dynamic> orderData) async {
+    try {
+      final items = orderData["items"] as List<Map<String, dynamic>>? ?? [];
+      final customerName = (orderData["customer_name"] as String? ?? "").trim();
+      final note = orderData["note"] as String? ?? "";
+
+      // Kiểm tra có sản phẩm khớp không
+      final matchedItems = items.where((item) => item["matched"] == true).toList();
+      
+      if (matchedItems.isEmpty) {
+        return {
+          "success": false,
+          "reason": "no_products_found",
+          "message": "❌ Không tìm thấy sản phẩm phù hợp trong kho hàng. Vui lòng kiểm tra tên sản phẩm.",
+          "suggested_products": items.map((item) => item["original_name"]).toList(),
+        };
+      }
+
+      // Tìm khách hàng
+      final customer = await _findCustomerByName(customerName);
+      
+      // Tạo đơn hàng
+      final orderItems = <OrderItem>[]; 
+      double totalAmount = 0;
+      
+      for (final item in matchedItems) {
+        final product = item["product"] as Product?; 
+        final quantity = item["quantity"] as int? ?? 0;
+        
+        if (product == null || quantity <= 0) {
+          continue; // Bỏ qua item không hợp lệ
+        }
+        
+        // Kiểm tra tồn kho
+        if (product.stockQuantity < quantity) {
+          return {
+            "success": false,
+            "reason": "insufficient_stock", 
+            "message": "❌ Sản phẩm '${product.name}' không đủ tồn kho. Có sẵn: ${product.stockQuantity}, yêu cầu: $quantity",
+            "product": product.name,
+            "available": product.stockQuantity,
+            "requested": quantity,
+          };
+        }
+        
+        final itemTotal = quantity * product.sellingPrice;
+        totalAmount += itemTotal;
+        
+        orderItems.add(OrderItem(
+          id: '${DateTime.now().millisecondsSinceEpoch}_${product.id}',
+          productId: product.id,
+          productName: product.name,
+          productCode: product.code,
+          quantity: quantity,
+          unitPrice: product.sellingPrice,
+          costPrice: product.costPrice,
+          unit: product.unit,
+        ));  
+      }
+
+      // Tạo Order object với đúng cấu trúc
+      final now = DateTime.now();  
+      final orderId = now.millisecondsSinceEpoch.toString();
+      final orderNumber = Order.generateOrderNumber(now, 1); // Sequence sẽ được tính lại trong OrderService
+
+      final order = Order(
+        id: orderId,
+        orderNumber: orderNumber,
+        orderDate: now,
+        status: OrderStatus.paid, // Đơn hàng AI tự động đã thanh toán
+        items: orderItems,
+        customer: customer,
+        note: note,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      // Lưu đơn hàng
+      await _orderService.addOrder(order);
+
+      return {
+        "success": true,
+        "order": order,
+        "message": "✅ Đã tạo đơn hàng thành công!",
+        "customer_info": customer.isWalkIn ? "Khách lẻ" : customer.name,
+        "total_amount": order.total,
+        "item_count": orderItems.length,
+      };
+
+    } catch (e) {
+      return {
+        "success": false,
+        "reason": "creation_error",
+        "message": "❌ Lỗi khi tạo đơn hàng: $e",
+        "error": e.toString(),
+      };
+    }
+  }
+
+  // Xem trước đơn hàng và chuẩn bị thông tin để hỏi người dùng
+  Future<Map<String, dynamic>> _previewOrder(Map<String, dynamic> orderData) async {
+    try {
+      final items = orderData["items"] as List<Map<String, dynamic>>? ?? [];
+      final customerName = (orderData["customer_name"] as String? ?? "").trim();
+      final note = orderData["note"] as String? ?? "";
+
+      // Kiểm tra có sản phẩm khớp không
+      final matchedItems = items.where((item) => item["matched"] == true).toList();
+      final unmatchedItems = items.where((item) => item["matched"] != true).toList();
+      
+      if (matchedItems.isEmpty) {
+        return {
+          "success": false,
+          "reason": "no_products_found",
+          "message": "❌ Không tìm thấy sản phẩm phù hợp trong kho hàng",
+          "suggested_products": items.map((item) => item["original_name"]).toList(),
+          "unmatched_items": unmatchedItems,
+        };
+      }
+
+      // Tìm khách hàng
+      final customer = await _findCustomerByName(customerName);
+      
+      // Chuẩn bị thông tin đơn hàng để hiển thị
+      String itemsPreview = ""; 
+      double totalAmount = 0;
+      List<Map<String, dynamic>> orderItemsPreview = [];
+      List<String> stockIssues = [];
+       
+      for (final item in matchedItems) {
+        final product = item["product"] as Product?;
+        final quantity = item["quantity"] as int? ?? 0;
+        
+        if (product == null || quantity <= 0) {
+          continue; // Bỏ qua item không hợp lệ
+        }
+        
+        // Kiểm tra tồn kho
+        if (product.stockQuantity < quantity) {
+          stockIssues.add("⚠️ ${product.name}: Yêu cầu $quantity, có sẵn ${product.stockQuantity}");
+        }
+        
+        final itemTotal = quantity * product.sellingPrice;
+        totalAmount += itemTotal;
+        
+        itemsPreview += "✅ ${product.name}: ${quantity} ${product.unit} × ${FormatUtils.formatCurrency(product.sellingPrice)} = ${FormatUtils.formatCurrency(itemTotal)} VNĐ\n";
+        
+        orderItemsPreview.add({
+          "product": product,
+          "quantity": quantity,
+          "unit_price": product.sellingPrice,
+          "line_total": itemTotal,
+        });
+      }
+
+      // Thêm thông tin sản phẩm không khớp
+      String unmatchedPreview = "";
+      if (unmatchedItems.isNotEmpty) {
+        unmatchedPreview = "\n❓ Sản phẩm không tìm thấy:\n";
+        for (final item in unmatchedItems) {
+          unmatchedPreview += "• ${item["original_name"]}: ${item["quantity"]}\n";
+        }
+      }
+
+      return {
+        "success": true,
+        "customer": customer,
+        "customer_info": customer.isWalkIn ? "Khách lẻ" : customer.name,
+        "matched_items": matchedItems,
+        "unmatched_items": unmatchedItems,
+        "order_items_preview": orderItemsPreview,
+        "total_amount": totalAmount,
+        "items_preview": itemsPreview,
+        "unmatched_preview": unmatchedPreview,
+        "stock_issues": stockIssues,
+        "note": note,
+        "has_stock_issues": stockIssues.isNotEmpty,
+        "has_unmatched": unmatchedItems.isNotEmpty,
+      };
+
+    } catch (e) {
+      return {
+        "success": false,
+        "reason": "preview_error",
+        "message": "❌ Lỗi khi chuẩn bị thông tin đơn hàng: $e",
+        "error": e.toString(),
+      };
+    }
   }
 
   String generateReport(Map<String, dynamic> analysis, List<FinanceRecord> records) {
@@ -335,6 +591,133 @@ class AIService {
 ${totalRevenue > 0 ? '📋 Tỷ lệ lợi nhuận: ${(totalProfit / totalRevenue * 100).toStringAsFixed(2)}%' : ''}''';
   }
 
+  // Tạo metadata cho popup xác nhận đơn hàng  
+  Map<String, dynamic> createOrderConfirmationDialog(Map<String, dynamic> previewData) {
+    final customerInfo = previewData["customer_info"] as String? ?? "Khách lẻ";
+    final totalAmount = previewData["total_amount"] as double? ?? 0.0;
+    final itemsPreview = previewData["items_preview"] as String? ?? "";
+    final unmatchedPreview = previewData["unmatched_preview"] as String? ?? "";
+    final stockIssues = previewData["stock_issues"] as List<String>? ?? [];
+    final hasStockIssues = previewData["has_stock_issues"] as bool? ?? false;
+    final hasUnmatched = previewData["has_unmatched"] as bool? ?? false;
+    final note = previewData["note"] as String? ?? "";
+    
+    String dialogContent = '''🛒 Xác nhận tạo đơn hàng:
+👤 Khách hàng: $customerInfo
+$itemsPreview${unmatchedPreview}
+💰 Tổng tiền: ${FormatUtils.formatCurrency(totalAmount)} VNĐ${note.isNotEmpty ? '\n📝 Ghi chú: $note' : ''}''';
+
+    // Thêm cảnh báo nếu có
+    if (hasStockIssues) {
+      dialogContent += "\n\n⚠️ Vấn đề tồn kho:\n";
+      for (final issue in stockIssues) {
+        dialogContent += "$issue\n";
+      }
+    }
+
+    if (hasUnmatched) {
+      dialogContent += "\n⚠️ Một số sản phẩm không tìm thấy trong kho.";
+    }
+    
+    return {
+      "show_dialog": true,
+      "dialog_type": "order_confirmation",
+      "title": "Xác nhận đơn hàng",
+      "content": dialogContent,
+      "preview_data": previewData,
+      "has_issues": hasStockIssues || hasUnmatched,
+      "positive_button": "Tạo đơn hàng",
+      "negative_button": "Hủy",
+    };
+  }
+
+  // Xử lý xác nhận tạo đơn hàng từ người dùng
+  Future<Map<String, dynamic>> confirmOrderCreation(Map<String, dynamic> previewData) async {
+    try {
+      final items = previewData["matched_items"] as List<Map<String, dynamic>>? ?? [];
+      final customer = previewData["customer"] as Customer? ?? Customer.walkIn();
+      final note = previewData["note"] as String? ?? "";
+
+      // Tạo đơn hàng
+      final orderItems = <OrderItem>[];
+      double totalAmount = 0;
+      
+      for (final item in items) {
+        final product = item["product"] as Product?;
+        final quantity = item["quantity"] as int? ?? 0;
+        
+        if (product == null || quantity <= 0) {
+          continue; // Bỏ qua item không hợp lệ
+        }
+        
+        // Kiểm tra lại tồn kho (có thể đã thay đổi)
+        if (product.stockQuantity < quantity) {
+          return {
+            "success": false,
+            "reason": "insufficient_stock_changed", 
+            "message": "❌ Tồn kho sản phẩm '${product.name}' đã thay đổi. Có sẵn: ${product.stockQuantity}, yêu cầu: $quantity",
+            "product": product.name,
+            "available": product.stockQuantity,
+            "requested": quantity,
+          };
+        }
+        
+        final itemTotal = quantity * product.sellingPrice;
+        totalAmount += itemTotal;
+        
+        orderItems.add(OrderItem(
+          id: '${DateTime.now().millisecondsSinceEpoch}_${product.id}',
+          productId: product.id,
+          productName: product.name,
+          productCode: product.code,
+          quantity: quantity,
+          unitPrice: product.sellingPrice,
+          costPrice: product.costPrice,
+          unit: product.unit,
+        ));
+      }
+
+      // Tạo Order object
+      final now = DateTime.now();
+      final orderId = now.millisecondsSinceEpoch.toString();
+      final orderNumber = Order.generateOrderNumber(now, 1);
+      
+      final order = Order(
+        id: orderId,
+        orderNumber: orderNumber,
+        orderDate: now,
+        status: OrderStatus.paid,
+        items: orderItems,
+        customer: customer,
+        note: note,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      // Lưu đơn hàng
+      await _orderService.addOrder(order);
+
+      return {
+        "success": true,
+        "order": order,
+        "message": "✅ Đã tạo đơn hàng thành công!",
+        "customer_info": customer.isWalkIn ? "Khách lẻ" : customer.name,
+        "total_amount": order.total,
+        "item_count": orderItems.length,
+      };
+
+    } catch (e) {
+      return {
+        "success": false,
+        "reason": "creation_error",
+        "message": "❌ Lỗi khi tạo đơn hàng: $e",
+        "error": e.toString(),
+      };
+    }
+  }
+
+  // Xóa method xử lý xác nhận qua tin nhắn - giờ dùng popup
+
   // Xử lý tin nhắn và lưu lịch sử
   Future<ChatMessage> processMessage(String userMessage, List<FinanceRecord> records) async {
     // Lưu tin nhắn của user
@@ -346,7 +729,9 @@ ${totalRevenue > 0 ? '📋 Tỷ lệ lợi nhuận: ${(totalProfit / totalRevenu
     await _storageManager.addChatMessage(userChatMessage);
 
     try {
-      // Phân tích loại input
+            // Bỏ logic xử lý xác nhận qua tin nhắn - giờ dùng popup
+
+      // Xử lý bình thường nếu không phải xác nhận đơn hàng
       final analysis = await analyzeUserInput(userMessage);
       String aiResponse = "";
       String messageType = "general";
@@ -377,53 +762,53 @@ ${totalRevenue > 0 ? '📋 Tỷ lệ lợi nhuận: ${(totalProfit / totalRevenu
           };
         }
       } else if (analysis["type_input"] == "order") {
-        // Xử lý đơn hàng
+        // Xử lý đơn hàng thông minh
         final orderData = await extractOrderData(userMessage);
         messageType = "order";
         
         if (orderData == null || orderData["success"] != true) {
-          aiResponse = "Không thể trích xuất thông tin đơn hàng. Vui lòng mô tả rõ sản phẩm và số lượng.";
+          aiResponse = "❌ Không thể trích xuất thông tin đơn hàng. Vui lòng mô tả rõ sản phẩm và số lượng.";
           metadata = {"success": false, "reason": "invalid_order_data"};
         } else {
-          final items = orderData["items"] as List<Map<String, dynamic>>;
-          final customerName = orderData["customer_name"] as String;
-          final note = orderData["note"] as String;
+          // Chuẩn bị thông tin đơn hàng và hỏi ý kiến người dùng
+          final previewResult = await _previewOrder(orderData);
           
-          String itemsText = "";
-          double estimatedTotal = 0;
-          int matchedCount = 0;
-          
-          for (int i = 0; i < items.length; i++) {
-            final item = items[i];
-            final product = item["product"];
-            final quantity = item["quantity"];
-            final matched = item["matched"];
-            final originalName = item["original_name"];
+                    if (previewResult["success"] == true) {
+            // Tạo dialog xác nhận thay vì yêu cầu người dùng nhập tin nhắn
+            final dialogData = createOrderConfirmationDialog(previewResult);
             
-            if (matched && product != null) {
-              final lineTotal = quantity * product.sellingPrice;
-              estimatedTotal += lineTotal;
-              matchedCount++;
-              itemsText += "✅ ${product.name}: ${quantity} ${product.unit} × ${FormatUtils.formatCurrency(product.sellingPrice)} = ${FormatUtils.formatCurrency(lineTotal)} VNĐ\n";
-            } else {
-              itemsText += "❓ ${originalName}: ${quantity} (chưa khớp sản phẩm)\n";
+            aiResponse = "🔍 Đã phân tích đơn hàng thành công!\n📱 Vui lòng xem popup xác nhận để tiếp tục.";
+            
+            metadata = {
+              "success": true,
+              "order_preview": true,
+              "preview_data": previewResult,
+              "total_amount": previewResult["total_amount"],
+              "customer_type": (previewResult["customer"] as Customer?)?.isWalkIn == true ? "walk_in" : "registered",
+              "has_issues": previewResult["has_issues"] ?? false,
+              "dialog_data": dialogData,
+            };
+          } else {
+            // Không thể tạo preview đơn hàng
+            aiResponse = previewResult["message"] as String? ?? "Lỗi xử lý đơn hàng";
+            
+            // Thêm thông tin chi tiết dựa vào lý do lỗi
+            final reason = previewResult["reason"] as String? ?? "unknown_error";
+            if (reason == "no_products_found") {
+              final suggestedProducts = previewResult["suggested_products"] as List<dynamic>? ?? [];
+              aiResponse += "\n\n🔍 Sản phẩm bạn đề cập:\n";
+              for (final product in suggestedProducts) {
+                aiResponse += "• $product\n";
+              }
+              aiResponse += "\n💡 Vui lòng kiểm tra danh sách sản phẩm có sẵn hoặc thêm sản phẩm mới vào kho.";
             }
+            
+            metadata = {
+              "success": false,
+              "reason": reason,
+              "order_preview": false,
+            };
           }
-          
-          aiResponse = '''🛒 Đơn hàng đã được phân tích:
-${customerName.isNotEmpty ? '👤 Khách hàng: $customerName\n' : ''}$itemsText
-📊 Tổng ước tính: ${FormatUtils.formatCurrency(estimatedTotal)} VNĐ
-✅ Khớp sản phẩm: $matchedCount/${items.length}
-${note.isNotEmpty ? '📝 Ghi chú: $note\n' : ''}
-${matchedCount < items.length ? '\n⚠️ Một số sản phẩm chưa khớp với kho hàng. Vui lòng kiểm tra và điều chỉnh.' : ''}''';
-          
-          metadata = {
-            "success": true,
-            "order_data": orderData,
-            "estimated_total": estimatedTotal,
-            "matched_count": matchedCount,
-            "total_items": items.length,
-          };
         }
       } else if (analysis["type_input"] == "report") {
         // Xử lý báo cáo
@@ -461,8 +846,79 @@ ${matchedCount < items.length ? '\n⚠️ Một số sản phẩm chưa khớp v
         metadata: {"error": e.toString()},
       );
               await _storageManager.addChatMessage(errorMessage);
-      return errorMessage;
+      return errorMessage; 
     }
+  } 
+
+  // Method public để UI gọi khi người dùng xác nhận từ popup
+  Future<ChatMessage> handleOrderConfirmation(bool confirmed, Map<String, dynamic> previewData) async {
+    String aiResponse = "";
+    Map<String, dynamic>? metadata; 
+     
+    if (confirmed) {
+      // Người dùng đồng ý tạo đơn hàng
+      final confirmResult = await confirmOrderCreation(previewData);
+      
+      if (confirmResult["success"] == true) {
+        final order = confirmResult["order"] as Order?;
+        final customerInfo = confirmResult["customer_info"] as String? ?? "Khách lẻ";
+        final totalAmount = confirmResult["total_amount"] as double? ?? 0.0;
+        final itemCount = confirmResult["item_count"] as int? ?? 0;
+        
+        if (order == null) {
+          throw Exception("Lỗi: Không thể tạo đơn hàng");
+        }
+        
+        String itemsText = "";
+        for (final item in order.items) {
+          final lineTotal = item.quantity * item.unitPrice;
+          itemsText += "✅ ${item.productName}: ${item.quantity} ${item.unit} × ${FormatUtils.formatCurrency(item.unitPrice)} = ${FormatUtils.formatCurrency(lineTotal)} VNĐ\n";
+        }
+        
+        aiResponse = '''🎉 Đã tạo đơn hàng thành công!
+🆔 Mã đơn: ${order.orderNumber}
+👤 Khách hàng: $customerInfo
+$itemsText
+💰 Tổng tiền: ${FormatUtils.formatCurrency(totalAmount)} VNĐ
+📦 Số sản phẩm: $itemCount
+📅 Thời gian: ${FormatUtils.formatSimpleDate(order.createdAt)}
+${order.note.isNotEmpty ? '📝 Ghi chú: ${order.note}\n' : ''}
+✨ Đơn hàng đã được lưu vào hệ thống và tồn kho đã được cập nhật!''';
+        
+        metadata = {
+          "success": true,
+          "order_created": true,
+          "order_id": order.id,
+          "order_number": order.orderNumber,
+          "total_amount": totalAmount,
+          "item_count": itemCount,
+        };
+      } else {
+        aiResponse = confirmResult["message"] as String? ?? "Lỗi không xác định";
+        metadata = {
+          "success": false,
+          "reason": confirmResult["reason"] ?? "unknown_error",
+          "order_created": false,
+        };
+      }
+    } else {
+      // Người dùng từ chối tạo đơn hàng
+      aiResponse = "❌ Đã hủy tạo đơn hàng theo yêu cầu của bạn.\n💡 Bạn có thể mô tả lại đơn hàng khác nếu muốn.";
+      metadata = {
+        "success": false,
+        "reason": "user_cancelled",
+        "order_created": false,
+      };
+    }
+    
+    final aiChatMessage = ChatMessage(
+      text: aiResponse,
+      isUser: false,
+      type: "order_confirmation",
+      metadata: metadata,
+    );
+    await _storageManager.addChatMessage(aiChatMessage);
+    return aiChatMessage;
   }
 
   // Lấy lịch sử chat
@@ -485,12 +941,12 @@ ${matchedCount < items.length ? '\n⚠️ Một số sản phẩm chưa khớp v
     final entryMessages = chatHistory.where((msg) => msg.type == 'entry').length;
     final reportMessages = chatHistory.where((msg) => msg.type == 'report').length;
     final searchMessages = chatHistory.where((msg) => msg.type == 'search').length;
-    final errorMessages = chatHistory.where((msg) => msg.type == 'error').length;
+    final errorMessages = chatHistory.where((msg) => msg.type == 'error').length; 
 
     return {
       'totalMessages': chatHistory.length,
       'userMessages': userMessages,
-      'aiMessages': aiMessages,
+      'aiMessages': aiMessages, 
       'entryMessages': entryMessages,
       'reportMessages': reportMessages,
       'searchMessages': searchMessages,
