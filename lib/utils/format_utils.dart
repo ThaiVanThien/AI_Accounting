@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 class FormatUtils {
   // Safe currency formatter
@@ -70,5 +71,51 @@ class FormatUtils {
     } catch (e) {
       return value.toStringAsFixed(2);
     }
+  }
+
+  // Parse currency string back to double
+  static double parseCurrency(String value) {
+    try {
+      // Remove all non-digits and dots
+      final cleanValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+      return double.parse(cleanValue);
+    } catch (e) {
+      return 0.0;
+    }
+  }
+}
+
+// Currency Input Formatter for real-time formatting
+class CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Only allow digits
+    final newText = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    
+    if (newText.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Parse to double and format
+    final number = double.tryParse(newText) ?? 0;
+    final formatted = FormatUtils.formatCurrency(number);
+    
+    // Calculate cursor position
+    final oldLength = oldValue.text.length;
+    final newLength = formatted.length;
+    final selectionOffset = newValue.selection.end + (newLength - oldLength);
+    
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(
+        offset: selectionOffset.clamp(0, formatted.length),
+      ),
+    );
   }
 } 

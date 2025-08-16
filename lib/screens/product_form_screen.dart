@@ -4,6 +4,7 @@ import '../models/product.dart';
 import '../services/product_service.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
+import '../utils/format_utils.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final Product? product;
@@ -40,10 +41,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _codeController = TextEditingController(text: widget.product?.code ?? '');
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _sellingPriceController = TextEditingController(
-      text: widget.product?.sellingPrice.toString() ?? ''
+      text: widget.product != null ? FormatUtils.formatCurrency(widget.product!.sellingPrice) : ''
     );
     _costPriceController = TextEditingController(
-      text: widget.product?.costPrice.toString() ?? ''
+      text: widget.product != null ? FormatUtils.formatCurrency(widget.product!.costPrice) : ''
     );
     _descriptionController = TextEditingController(text: widget.product?.description ?? '');
     _stockQuantityController = TextEditingController(
@@ -91,8 +92,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         id: widget.product?.id ?? '',
         code: _codeController.text.trim(),
         name: _nameController.text.trim(),
-        sellingPrice: double.parse(_sellingPriceController.text),
-        costPrice: double.parse(_costPriceController.text),
+        sellingPrice: FormatUtils.parseCurrency(_sellingPriceController.text),
+        costPrice: FormatUtils.parseCurrency(_costPriceController.text),
         unit: _selectedUnit,
         description: _descriptionController.text.trim(),
         isActive: _isActive,
@@ -246,8 +247,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   }
 
   Widget _buildPriceCalculator() {
-    double sellingPrice = double.tryParse(_sellingPriceController.text) ?? 0;
-    double costPrice = double.tryParse(_costPriceController.text) ?? 0;
+    double sellingPrice = FormatUtils.parseCurrency(_sellingPriceController.text);
+    double costPrice = FormatUtils.parseCurrency(_costPriceController.text);
     double profit = sellingPrice - costPrice;
     double margin = costPrice > 0 ? (profit / costPrice * 100) : 0;
 
@@ -506,14 +507,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                               hint: '0',
                               suffix: 'VNĐ',
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [CurrencyInputFormatter()],
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Vui lòng nhập giá bán';
                                 }
-                                final price = double.tryParse(value);
-                                if (price == null || price < 0) {
-                                  return 'Giá bán không hợp lệ';
+                                final price = FormatUtils.parseCurrency(value);
+                                if (price <= 0) {
+                                  return 'Giá bán phải lớn hơn 0';
                                 }
                                 return null;
                               },
@@ -532,14 +533,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                               hint: '0',
                               suffix: 'VNĐ',
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [CurrencyInputFormatter()],
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Vui lòng nhập giá vốn';
                                 }
-                                final price = double.tryParse(value);
-                                if (price == null || price < 0) {
-                                  return 'Giá vốn không hợp lệ';
+                                final price = FormatUtils.parseCurrency(value);
+                                if (price < 0) {
+                                  return 'Giá vốn không thể âm';
                                 }
                                 return null;
                               },

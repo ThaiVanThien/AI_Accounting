@@ -264,8 +264,8 @@ class AIService {
     
     // 4. Strict keyword match (tất cả từ quan trọng phải match)
     if (searchWords.length >= 2) {
-      for (final product in products) {
-        final productWords = product.name.toLowerCase().split(' ');
+    for (final product in products) {
+      final productWords = product.name.toLowerCase().split(' ');
         int exactMatches = 0;
         
         for (final searchWord in searchWords) {
@@ -788,7 +788,7 @@ $itemsPreview${unmatchedPreview}
               "has_issues": previewResult["has_issues"] ?? false,
               "dialog_data": dialogData,
             };
-          } else {
+            } else {
             // Không thể tạo preview đơn hàng
             aiResponse = previewResult["message"] as String? ?? "Lỗi xử lý đơn hàng";
             
@@ -802,8 +802,8 @@ $itemsPreview${unmatchedPreview}
               }
               aiResponse += "\n💡 Vui lòng kiểm tra danh sách sản phẩm có sẵn hoặc thêm sản phẩm mới vào kho.";
             }
-            
-            metadata = {
+          
+          metadata = {
               "success": false,
               "reason": reason,
               "order_preview": false,
@@ -846,7 +846,7 @@ $itemsPreview${unmatchedPreview}
         metadata: {"error": e.toString()},
       );
               await _storageManager.addChatMessage(errorMessage);
-      return errorMessage; 
+      return errorMessage;
     }
   } 
 
@@ -941,12 +941,12 @@ ${order.note.isNotEmpty ? '📝 Ghi chú: ${order.note}\n' : ''}
     final entryMessages = chatHistory.where((msg) => msg.type == 'entry').length;
     final reportMessages = chatHistory.where((msg) => msg.type == 'report').length;
     final searchMessages = chatHistory.where((msg) => msg.type == 'search').length;
-    final errorMessages = chatHistory.where((msg) => msg.type == 'error').length; 
+    final errorMessages = chatHistory.where((msg) => msg.type == 'error').length;
 
     return {
       'totalMessages': chatHistory.length,
       'userMessages': userMessages,
-      'aiMessages': aiMessages, 
+      'aiMessages': aiMessages,
       'entryMessages': entryMessages,
       'reportMessages': reportMessages,
       'searchMessages': searchMessages,

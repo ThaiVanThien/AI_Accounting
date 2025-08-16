@@ -52,10 +52,10 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _orderNumberController = TextEditingController(text: widget.order?.orderNumber ?? '');
     _noteController = TextEditingController(text: widget.order?.note ?? '');
     _discountController = TextEditingController(
-      text: widget.order?.discount.toString() ?? '0'
+      text: widget.order != null ? FormatUtils.formatCurrency(widget.order!.discount) : ''
     );
     _taxController = TextEditingController(
-      text: widget.order?.tax.toString() ?? '0'
+      text: widget.order != null ? FormatUtils.formatCurrency(widget.order!.tax) : ''
     );
     
     if (widget.order != null) {
@@ -161,8 +161,8 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   }
 
   double get _subtotal => _items.fold(0, (sum, item) => sum + item.lineTotal);
-  double get _discount => double.tryParse(_discountController.text) ?? 0;
-  double get _tax => double.tryParse(_taxController.text) ?? 0;
+  double get _discount => FormatUtils.parseCurrency(_discountController.text);
+  double get _tax => FormatUtils.parseCurrency(_taxController.text);
   double get _total => _subtotal - _discount + _tax;
   double get _totalCost => _items.fold(0, (sum, item) => sum + item.lineCostTotal);
   double get _profit => _total - _totalCost;
@@ -320,8 +320,8 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     setState(() {
       _orderNumberController.clear();
       _noteController.clear();
-      _discountController.text = '0';
-      _taxController.text = '0';
+      _discountController.clear();
+      _taxController.clear();
       _items.clear();
       _orderDate = DateTime.now();
       _status = OrderStatus.paid; // Reset về draft để không cập nhật tồn kho
@@ -661,20 +661,23 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                         ],
                       ),
                       const SizedBox(height: AppStyles.spacingL),
-                      
-                      TextFormField(
-                        controller: _orderNumberController,
-                        decoration: const InputDecoration(
-                          labelText: 'Số đơn hàng *',
-                          prefixIcon: Icon(Icons.receipt_long),
-                          border: OutlineInputBorder(),
+
+                      IgnorePointer(
+                        child: TextFormField(
+                          controller: _orderNumberController,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Số đơn hàng *',
+                            prefixIcon: Icon(Icons.receipt_long),
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Vui lòng nhập số đơn hàng';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập số đơn hàng';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: AppStyles.spacingL),
                       Row(
@@ -1103,7 +1106,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                             child: TextFormField(
                               controller: _discountController,
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [CurrencyInputFormatter()],
                               decoration: const InputDecoration(
                                 labelText: 'Giảm giá',
                                 prefixIcon: Icon(Icons.discount),
@@ -1122,7 +1125,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                             child: TextFormField(
                               controller: _taxController,
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [CurrencyInputFormatter()],
                               decoration: const InputDecoration(
                                 labelText: 'Thuế',
                                 prefixIcon: Icon(Icons.receipt),
@@ -1460,7 +1463,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
   void initState() {
     super.initState();
     _quantityController = TextEditingController(text: widget.item.quantity.toString());
-    _unitPriceController = TextEditingController(text: widget.item.unitPrice.toString());
+    _unitPriceController = TextEditingController(text: FormatUtils.formatCurrency(widget.item.unitPrice));
     _noteController = TextEditingController(text: widget.item.note);
   }
 
@@ -1474,7 +1477,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
 
   void _saveChanges() {
     final quantity = int.tryParse(_quantityController.text);
-    final unitPrice = double.tryParse(_unitPriceController.text);
+    final unitPrice = FormatUtils.parseCurrency(_unitPriceController.text);
 
     if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1509,7 +1512,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
   @override
   Widget build(BuildContext context) {
     final quantity = int.tryParse(_quantityController.text) ?? 0;
-    final unitPrice = double.tryParse(_unitPriceController.text) ?? 0;
+    final unitPrice = FormatUtils.parseCurrency(_unitPriceController.text);
     final lineTotal = quantity * unitPrice;
 
     return Dialog(
@@ -1561,7 +1564,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
             TextFormField(
               controller: _unitPriceController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [CurrencyInputFormatter()],
               decoration: const InputDecoration(
                 labelText: 'Đơn giá',
                 suffixText: 'VNĐ',
