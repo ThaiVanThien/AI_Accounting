@@ -69,9 +69,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       } else {
         _filteredCustomers = _customers.where((customer) {
           return customer.name.toLowerCase().contains(query.toLowerCase()) ||
-                 customer.phone.contains(query) ||
-                 customer.email.toLowerCase().contains(query.toLowerCase()) ||
-                 customer.address.toLowerCase().contains(query.toLowerCase());
+              customer.phone.contains(query) ||
+              customer.email.toLowerCase().contains(query.toLowerCase()) ||
+              customer.address.toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
     });
@@ -80,9 +80,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   Future<void> _addCustomer() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const CustomerFormScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const CustomerFormScreen()),
     );
 
     if (result == true) {
@@ -150,7 +148,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa khách hàng "${customer.name}"?\n\nKhách hàng sẽ được đánh dấu là không hoạt động và có thể khôi phục sau.'),
+        content: Text(
+          'Bạn có chắc chắn muốn xóa khách hàng "${customer.name}"?\n\nKhách hàng sẽ được đánh dấu là không hoạt động và có thể khôi phục sau.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -282,81 +282,184 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               onChanged: _filterCustomers,
             ),
           ),
-          
+
           // Customer list
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredCustomers.isEmpty
-                    ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people_outline, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
-                            Text(
-                              'Không có khách hàng nào',
-                              style: TextStyle(fontSize: 16, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _filteredCustomers.length,
-                        itemBuilder: (context, index) {
-                          final customer = _filteredCustomers[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: customer.isWalkIn 
-                                    ? Colors.orange 
-                                    : AppColors.textPrimary,
-                                child: Icon(
-                                  customer.isWalkIn ? Icons.person : Icons.person_outline,
-                                  color: Colors.white,
-                                ),
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.people_outline, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text(
+                        'Không có khách hàng nào',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  )
+                : ListView.builder(
+                    itemCount: _filteredCustomers.length,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemBuilder: (context, index) {
+                      final customer = _filteredCustomers[index];
+                      return Dismissible(
+                        key: ValueKey(customer.id ?? index),
+                        direction: customer.isActive
+                            ? DismissDirection
+                                  .endToStart // active: swipe left to delete
+                            : DismissDirection
+                                  .startToEnd, // inactive: swipe right to restore
+                        confirmDismiss: (direction) async {
+                          // bạn có thể showDialog xác nhận ở đây nếu muốn
+                          return true;
+                        },
+                        onDismissed: (direction) {
+                          if (customer.isActive) {
+                            _deleteCustomer(customer);
+                          } else {
+                            _restoreCustomer(customer);
+                          }
+                        },
+                        background: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 20),
+                          color: Colors.green,
+                          child: const Row(
+                            children: [
+                              Icon(Icons.restore, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Khôi phục',
+                                style: TextStyle(color: Colors.white),
                               ),
+                            ],
+                          ),
+                        ),
+                        secondaryBackground: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          color: Colors.red,
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Icon(Icons.delete, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Xóa',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              // mở chi tiết hoặc edit khi tap toàn bộ hàng (tuỳ bạn)
+                              if (customer.isActive) _editCustomer(customer);
+                            },
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              leading: _buildAvatar(customer),
                               title: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Expanded(
                                     child: Text(
                                       customer.displayName,
-                                      style: AppStyles.bodyLarge,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: customer.isActive ? Colors.green : Colors.red,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        customer.isActive ? 'Hoạt động' : 'Không hoạt động',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildStatusChip(customer),
                                 ],
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   if (customer.phone.isNotEmpty)
-                                    Text('SĐT: ${customer.phone}'),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.phone, size: 16),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            'SĐT: ${customer.phone}',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   if (customer.email.isNotEmpty)
-                                    Text('Email: ${customer.email}'),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.email, size: 16),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            'Email: ${customer.email}',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   if (customer.address.isNotEmpty)
-                                    Text('Địa chỉ: ${customer.address}'),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            'Địa chỉ: ${customer.address}',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   if (customer.note.isNotEmpty)
-                                    Text('Ghi chú: ${customer.note}'),
-
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.note, size: 16),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            'Ghi chú: ${customer.note}',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                 ],
                               ),
                               trailing: PopupMenuButton<String>(
@@ -373,12 +476,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                       break;
                                   }
                                 },
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 itemBuilder: (context) => [
                                   if (customer.isActive)
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                       value: 'edit',
                                       child: Row(
-                                        children: [
+                                        children: const [
                                           Icon(Icons.edit, color: Colors.blue),
                                           SizedBox(width: 8),
                                           Text('Sửa'),
@@ -386,10 +492,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                       ),
                                     ),
                                   if (customer.isActive)
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                       value: 'delete',
                                       child: Row(
-                                        children: [
+                                        children: const [
                                           Icon(Icons.delete, color: Colors.red),
                                           SizedBox(width: 8),
                                           Text('Xóa'),
@@ -397,10 +503,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                       ),
                                     ),
                                   if (!customer.isActive)
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                       value: 'restore',
                                       child: Row(
-                                        children: [
+                                        children: const [
                                           Icon(Icons.restore, color: Colors.green),
                                           SizedBox(width: 8),
                                           Text('Khôi phục'),
@@ -408,11 +514,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                       ),
                                     ),
                                 ],
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  child: const Icon(Icons.more_vert, color: Colors.black87, size: 20),
+                                ),
                               ),
+
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -424,4 +537,79 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       ),
     );
   }
+}
+
+Widget _buildAvatar(dynamic customer) {
+  // Hiển thị gradient avatar + icon hoặc chữ tắt
+  final initials = _getInitials(customer.displayName ?? '');
+  return Container(
+    width: 48,
+    height: 48,
+    decoration: BoxDecoration(
+      gradient: customer.isWalkIn
+          ? const LinearGradient(colors: [Color(0xFFFFA726), Color(0xFFFF7043)])
+          : const LinearGradient(
+              colors: [Color(0xFF42A5F5), Color(0xFF1E88E5)],
+            ),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.08),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Center(
+      child: initials.isEmpty
+          ? const Icon(Icons.person, color: Colors.white)
+          : Text(
+              initials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+    ),
+  );
+}
+
+Widget _buildStatusChip(dynamic customer) {
+  return Container(
+    margin: const EdgeInsets.only(left: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: customer.isActive ? Colors.green : Colors.red,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          customer.isActive ? 'Hoạt động' : 'Không hoạt động',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+String _getInitials(String name) {
+  if (name.trim().isEmpty) return '';
+  final parts = name.trim().split(RegExp(r'\s+'));
+  if (parts.length == 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts.last[0]).toUpperCase();
 }

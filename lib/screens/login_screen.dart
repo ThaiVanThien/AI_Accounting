@@ -350,10 +350,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             end: Alignment.bottomRight,
             colors: [
               AppColors.backgroundPrimary,
-              AppColors.backgroundSecondary,
               AppColors.mainColor,
+              AppColors.mainColorDark,
             ],
-            stops: [0.0, 0.7, 1.0],
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
@@ -388,7 +388,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           color: AppColors.textOnMain,
                         ),
                       ),
-                      const SizedBox(height: AppStyles.spacingL),
+                      const SizedBox(height: AppStyles.spacingS),
                       Text(
                         'AI Accounting',
                         style: AppStyles.headingLarge.copyWith(
@@ -409,7 +409,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ),
                 ),
                 
-                const SizedBox(height: AppStyles.spacingXL * 2),
+                const SizedBox(height: AppStyles.spacingM * 1),
                 
                 // Login form
                 SlideTransition(
