@@ -922,41 +922,86 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               onPressed: _clearHistory,
               tooltip: 'Xóa lịch sử',
             ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              switch (value) {
-                case 'shop_info':
-                  showShopInfo();
-                  break;
-                case 'logout':
-                  logout();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'shop_info',
-                child: Row(
-                  children: [
-                    Icon(Icons.store),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Thông tin cửa hàng'),
-                  ],
+          Theme(
+            data: Theme.of(context).copyWith(
+              popupMenuTheme: PopupMenuThemeData(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: AppColors.errorColor),
-                    SizedBox(width: AppStyles.spacingS),
-                    Text('Đăng xuất', style: TextStyle(color: AppColors.errorColor)),
-                  ],
+            ),
+            child: PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                switch (value) {
+                  case 'shop_info':
+                    showShopInfo();
+                    break;
+                  case 'logout':
+                    logout();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'shop_info',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.store, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Thông tin cửa hàng',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+
+                // Divider tùy chỉnh
+                PopupMenuItem(
+                  enabled: false,
+                  height: 0,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    height: 1,
+                    color: Colors.grey.shade300,
+                  ),
+                ),
+
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.logout, color: Colors.red),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Đăng xuất',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
         ],
       ),
       body: Column(
