@@ -693,7 +693,7 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
               ),
             ),
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(Icons.more_vert,color: Colors.white,),
               onSelected: (value) {
                 switch (value) {
                   case 'refresh':

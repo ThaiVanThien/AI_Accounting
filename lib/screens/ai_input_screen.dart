@@ -917,7 +917,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             tooltip: 'Lịch sử chat',
           ),
           if (_messages.isNotEmpty)
-            IconButton(
+          IconButton(
               icon: const Icon(Icons.clear_all),
               onPressed: _clearHistory,
               tooltip: 'Xóa lịch sử',
@@ -937,7 +937,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               ),
             ),
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(Icons.more_vert,color: Colors.white,),
               onSelected: (value) {
                 switch (value) {
                   case 'shop_info':

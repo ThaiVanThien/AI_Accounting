@@ -142,7 +142,7 @@ class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
               ),
             ),
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(Icons.more_vert,color: Colors.white,),
               onSelected: (value) {
                 switch (value) {
                   case 'shop_info':
