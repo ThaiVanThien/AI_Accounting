@@ -379,10 +379,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(AppStyles.spacingS),
                 decoration: BoxDecoration(
                   color: AppColors.mainColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppStyles.radiusM), 
+                  borderRadius: BorderRadius.circular(AppStyles.radiusM),  
                 ),
-                child: Icon(
-                  Icons.analytics_rounded,
+                child: Icon( 
+                  Icons.analytics_rounded, 
                   size: 20,
                   color: AppColors.mainColor,
                 ),
@@ -1470,7 +1470,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const OrderFormScreen()),
-          ),
+          ).then((_) => _loadDashboardData()),
         ),
       );
     }

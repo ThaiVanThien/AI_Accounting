@@ -12,11 +12,19 @@ import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
 import '../screens/order_list_screen.dart';
 import '../screens/customer_form_screen.dart';
+import '../main.dart';
 
 class OrderFormScreen extends StatefulWidget {
   final Order? order;
+  final bool returnToHome;
+  final bool hideFloatingButton;
 
-  const OrderFormScreen({super.key, this.order});
+  const OrderFormScreen({
+    super.key, 
+    this.order, 
+    this.returnToHome = false,  
+    this.hideFloatingButton = false,
+  });
 
   @override
   State<OrderFormScreen> createState() => _OrderFormScreenState();
@@ -167,6 +175,17 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   double get _totalCost => _items.fold(0, (sum, item) => sum + item.lineCostTotal);
   double get _profit => _total - _totalCost;
 
+  /// Format quantity hiển thị: decimal cho Kg, integer cho unit khác
+  String _formatQuantity(double quantity, String unit) {
+    if (unit.toLowerCase() == 'kg') {
+      // Remove trailing zeros for decimal
+      return quantity % 1 == 0 ? quantity.toInt().toString() : quantity.toString();
+    } else {
+      // Show as integer for other units
+      return quantity.toInt().toString();
+    }
+  }
+ 
   /// Trả về customer được chọn hợp lệ, đảm bảo luôn có trong danh sách items
   Customer _getValidSelectedCustomer() {
     // Nếu _selectedCustomer null hoặc _availableCustomers chưa được tải, trả về walk-in
@@ -287,7 +306,19 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               ),
             );
           }
-                       _resetForm();
+          
+          // Handle post-creation navigation
+          if (!_isEditMode) {
+            if (widget.returnToHome) {
+              // From OrderListScreen -> redirect to Home tab "Tạo đơn hàng"
+              _navigateToCreateOrderTab();
+            } else {
+              // From HomeScreen -> show dialog with options
+              _showSuccessDialog();
+            }
+          } else {
+            _resetForm();
+          }
         }
       } else {
         if (mounted) {
@@ -330,6 +361,100 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _generateOrderNumber();
   }
 
+  void _navigateToCreateOrderTab() {
+    // Clear all routes and navigate to MainScreen with tab "Tạo đơn hàng" (index 1)
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => const MainScreenWithTab(initialTab: 1),
+      ),
+      (route) => false, // Remove all previous routes
+    );
+  } 
+  
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row( 
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.successColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: AppColors.successColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Text('Đơn hàng đã tạo!'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '🎉 Đơn hàng đã được tạo thành công và lưu vào hệ thống.',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: AppStyles.spacingM),
+            Text(
+              'Bạn muốn làm gì tiếp theo?',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _resetForm(); // Reset form for new order
+            },
+            child: const Text('Tạo đơn hàng mới'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OrderListScreen(),
+                ),
+              ).then((_) {
+                // Reload data when returning
+                _loadCustomers();
+                _loadProducts();
+              });
+            },
+            child: const Text('Xem danh sách'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Return to previous screen
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.successColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Quay lại'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addProduct() {
     if (_availableProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -367,35 +492,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
      );
    }
 
-   void _editOrderItem(int index) {
-    final item = _items[index];
-    final product = _availableProducts.firstWhere(
-      (p) => p.id == item.productId,
-      orElse: () => Product(
-        id: item.productId,
-        code: item.productCode,
-        name: item.productName,
-        sellingPrice: item.unitPrice,
-        costPrice: item.costPrice,
-        unit: item.unit,
-      ),
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => _OrderItemEditDialog(
-        item: item,
-        product: product,
-        onItemUpdated: (updatedItem) {
-          setState(() {
-            _items[index] = updatedItem;
-          });
-          // Force rebuild để cập nhật UI ngay lập tức
-          setState(() {});
-        },
-      ),
-    );
-  }
 
   void _removeOrderItem(int index) {
     setState(() {
@@ -427,7 +523,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             const SizedBox(height: AppStyles.spacingXS),
             Row(
               children: [
-                Text('${item.quantity} ${item.unit}'),
+                Text('${_formatQuantity(item.quantity, item.unit)} ${item.unit}'),
                 const Text(' × '),
                 Text('${FormatUtils.formatCurrency(item.unitPrice)} VNĐ'),
                 const Text(' = '),
@@ -445,11 +541,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              onPressed: () => _editOrderItem(index),
-              icon: const Icon(Icons.edit, size: 20),
-              color: AppColors.infoColor,
-            ),
             IconButton(
               onPressed: () => _removeOrderItem(index),
               icon: const Icon(Icons.delete, size: 20),
@@ -955,7 +1046,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                                  // Hiển thị thông tin real-time
                                  if (_items.isNotEmpty)
                                    Text(
-                                     '${_items.length} sản phẩm • ${_items.fold(0, (sum, item) => sum + item.quantity)} đơn vị • ${FormatUtils.formatCurrency(_subtotal)} VNĐ',
+                                     '${_items.length} sản phẩm • ${_items.fold(0.0, (sum, item) => sum + item.quantity).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')} đơn vị • ${FormatUtils.formatCurrency(_subtotal)} VNĐ',
                                      style: AppStyles.bodySmall.copyWith(
                                        color: AppColors.textSecondary,
                                      ),
@@ -1203,7 +1294,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
         ),
       ),
-             floatingActionButton: FloatingActionButton.extended(
+             floatingActionButton: widget.hideFloatingButton ? null : FloatingActionButton.extended(
          onPressed: () {
            Navigator.push(
              context,
@@ -1242,7 +1333,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 // Product Selection Dialog
 class _ProductSelectionDialog extends StatefulWidget {
   final List<Product> products;
-  final Function(Product, int) onProductSelected;
+  final Function(Product, double) onProductSelected;
 
   const _ProductSelectionDialog({
     required this.products,
@@ -1296,11 +1387,24 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
       return;
     }
 
-    final quantity = int.tryParse(_quantityController.text);
+    final quantityText = _quantityController.text;
+    final quantity = double.tryParse(quantityText);
+    
     if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vui lòng nhập số lượng hợp lệ'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+      return;
+    }
+    
+    // Validate: non-Kg units should not have decimal values
+    if (_selectedProduct!.unit.toLowerCase() != 'kg' && quantity % 1 != 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_selectedProduct!.unit} không thể có số lẻ. Vui lòng nhập số nguyên.'),
           backgroundColor: AppColors.errorColor,
         ),
       );
@@ -1403,20 +1507,21 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                 Expanded(
                   child: TextFormField(
                     controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
                       isDense: true,
+                      suffixText: _selectedProduct?.unit,
                     ),
                   ),
                 ),
               ],
             ),
             
-            const SizedBox(height: AppStyles.spacingL),
+            const SizedBox(height: AppStyles.spacingL), 
             
-            // Actions
+            // Actions 
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -1462,9 +1567,20 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
   @override
   void initState() {
     super.initState();
-    _quantityController = TextEditingController(text: widget.item.quantity.toString());
+    _quantityController = TextEditingController(text: _formatQuantityForInput(widget.item.quantity, widget.item.unit));
     _unitPriceController = TextEditingController(text: FormatUtils.formatCurrency(widget.item.unitPrice));
     _noteController = TextEditingController(text: widget.item.note);
+  }
+
+  /// Format quantity for input field: decimal cho Kg, integer cho unit khác
+  String _formatQuantityForInput(double quantity, String unit) {
+    if (unit.toLowerCase() == 'kg') {
+      // Keep decimal if needed
+      return quantity % 1 == 0 ? quantity.toInt().toString() : quantity.toString();
+    } else {
+      // Always show as integer for other units
+      return quantity.toInt().toString();
+    }
   }
 
   @override
@@ -1476,13 +1592,25 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
   }
 
   void _saveChanges() {
-    final quantity = int.tryParse(_quantityController.text);
+    final quantityText = _quantityController.text;
+    final quantity = double.tryParse(quantityText);
     final unitPrice = FormatUtils.parseCurrency(_unitPriceController.text);
 
     if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vui lòng nhập số lượng hợp lệ'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+      return;
+    }
+    
+    // Validate: non-Kg units should not have decimal values
+    if (widget.item.unit.toLowerCase() != 'kg' && quantity % 1 != 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${widget.item.unit} không thể có số lẻ. Vui lòng nhập số nguyên.'),
           backgroundColor: AppColors.errorColor,
         ),
       );
@@ -1511,7 +1639,9 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final quantity = int.tryParse(_quantityController.text) ?? 0;
+    final quantityText = _quantityController.text;
+    final quantity = double.tryParse(quantityText) ?? 0;
+    
     final unitPrice = FormatUtils.parseCurrency(_unitPriceController.text);
     final lineTotal = quantity * unitPrice;
 
@@ -1540,18 +1670,18 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               ],
             ),
             const SizedBox(height: AppStyles.spacingM),
-            
+
             Text(
               widget.item.productName,
               style: AppStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
             ),
             Text('Mã: ${widget.item.productCode}'),
             const SizedBox(height: AppStyles.spacingL),
-            
+
             TextFormField(
               controller: _quantityController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
               decoration: InputDecoration(
                 labelText: 'Số lượng',
                 suffixText: widget.item.unit,
@@ -1560,7 +1690,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               onChanged: (value) => setState(() {}),
             ),
             const SizedBox(height: AppStyles.spacingM),
-            
+
             TextFormField(
               controller: _unitPriceController,
               keyboardType: TextInputType.number,
@@ -1573,7 +1703,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               onChanged: (value) => setState(() {}),
             ),
             const SizedBox(height: AppStyles.spacingM),
-            
+
             TextFormField(
               controller: _noteController,
               decoration: const InputDecoration(
@@ -1583,7 +1713,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               maxLines: 2,
             ),
             const SizedBox(height: AppStyles.spacingL),
-            
+
             Container(
               padding: const EdgeInsets.all(AppStyles.spacingM),
               decoration: BoxDecoration(
@@ -1605,7 +1735,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               ),
             ),
             const SizedBox(height: AppStyles.spacingL),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

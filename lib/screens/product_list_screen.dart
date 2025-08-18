@@ -141,124 +141,6 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
     }
   }
 
-  void _showProductDetails(Product product) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        titlePadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-        contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-        backgroundColor: Colors.white,
-        title: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Row(
-                  children: [
-                    Icon(Icons.inventory_2, color: AppColors.mainColorDark, size: 24),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, size: 20, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
-          ],
-        ),
-
-        content: Container(
-          width: 500,
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow(Icons.confirmation_number, 'Mã sản phẩm:', product.code),
-                  _buildDetailRow(Icons.sell, 'Giá bán:', '${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ'),
-                  _buildDetailRow(Icons.attach_money, 'Giá vốn:', '${FormatUtils.formatCurrency(product.costPrice)} VNĐ'),
-                  _buildDetailRow(Icons.trending_up, 'Lợi nhuận:',
-                      '${FormatUtils.formatCurrency(product.profitPerUnit)} VNĐ (${product.profitMargin.toStringAsFixed(1)}%)'),
-                  const Divider(),
-                  _buildDetailRow(Icons.straighten, 'Đơn vị:', product.unit),
-                  _buildDetailRow(Icons.category, 'Nhóm hàng:', product.category.isEmpty ? 'Chưa phân loại' : product.category),
-                  const Divider(),
-                  _buildDetailRow(Icons.inventory, 'Tồn kho:', '${product.stockQuantity} ${product.unit}'),
-                  _buildDetailRow(Icons.warning_amber, 'Tồn kho tối thiểu:', '${product.minStockLevel} ${product.unit}'),
-                  _buildDetailRow(Icons.account_balance_wallet, 'Giá trị tồn kho:', '${FormatUtils.formatCurrency(product.stockValue)} VNĐ'),
-                  const Divider(),
-                  _buildDetailRow(Icons.check_circle, 'Trạng thái:', product.isActive ? 'Đang bán' : 'Ngừng bán'),
-                  if (product.description.isNotEmpty)
-                    _buildDetailRow(Icons.notes, 'Mô tả:', product.description),
-                  if (product.isLowStock)
-                    Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning, color: Colors.orange, size: 22),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'Cảnh báo: Tồn kho thấp',
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          /*TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
-          ),*/
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _editProduct(product);
-            },
-            child: const Icon(Icons.edit),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
@@ -418,7 +300,6 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppStyles.radiusL),
-          onTap: () => _showProductDetails(product),
           child: Padding(
             padding: const EdgeInsets.all(AppStyles.spacingM),
             child: Column(

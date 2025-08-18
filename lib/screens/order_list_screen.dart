@@ -7,7 +7,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
 import 'order_form_screen.dart';
-import '../main.dart'; // Import để sử dụng CommonScreenMixin
+import '../main.dart'; // Import để sử dụng CommonScreenMixin và MainScreenWithTab
 
 class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});
@@ -418,11 +418,12 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
   }
 
   void _addOrder() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const OrderFormScreen(),
-      ),
+    // Navigate back to MainScreen with tab "Tạo đơn hàng" (index 1) 
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute( 
+        builder: (context) => const MainScreenWithTab(initialTab: 1),
+      ),  
+      (route) => false, // Remove all previous routes
     );
   }
 
@@ -762,7 +763,7 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
                       Expanded(
                         child: _buildOrderInfoItem(
                           'Số lượng',
-                          '${order.totalQuantity}',
+                          '${order.totalQuantity.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}',
                           AppColors.warningColor,
                           Icons.shopping_cart,
                         ),

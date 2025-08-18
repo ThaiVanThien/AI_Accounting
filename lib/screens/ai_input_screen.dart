@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../models/finance_record.dart';
 import '../models/chat_message.dart';
 import '../models/order.dart';
@@ -38,6 +40,13 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   late AnimationController _typingAnimationController;
   late AnimationController _voiceAnimationController;
 
+  // Speech Recognition
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  bool _speechListening = false;
+  String _speechText = '';
+  double _confidenceLevel = 0;
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +59,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    // Voice feature will be implemented in future updates
+    _initializeSpeech();
     _loadChatHistory();
   }
 
@@ -63,7 +72,128 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     super.dispose();
   }
 
-  void _showVoiceComingSoonDialog() {
+  // Initialize speech recognition
+  Future<void> _initializeSpeech() async {
+    try {
+      _speechEnabled = await _speechToText.initialize(
+        onStatus: _onSpeechStatus,
+        onError: _onSpeechError,
+      );
+    } catch (e) {
+      print('Error initializing speech: $e');
+      _speechEnabled = false;
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+    // Handle speech status changes
+  void _onSpeechStatus(String status) {
+    print('Speech status: $status');
+    if (mounted) {
+      setState(() {
+        _speechListening = status == 'listening';
+      });
+    }
+  }
+
+  // Handle speech errors
+  void _onSpeechError(dynamic error) {
+    print('Speech error: $error');
+    if (mounted) {
+      setState(() {
+        _speechListening = false;
+      });
+      
+      String errorMessage = 'Lỗi không xác định';
+      if (error.toString().contains('network')) {
+        errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet.';
+      } else if (error.toString().contains('permission')) {
+        errorMessage = 'Vui lòng cấp quyền microphone để sử dụng tính năng này.';
+      } else if (error.toString().contains('not_available')) {
+        errorMessage = 'Tính năng nhận diện giọng nói không khả dụng trên thiết bị này.';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    }
+  }
+
+  // Start speech recognition
+  Future<void> _startListening() async {
+    if (!_speechEnabled) {
+      _showPermissionDialog();
+      return;
+    }
+
+    try {
+      await _speechToText.listen(
+        onResult: _onSpeechResult,
+        localeId: 'vi_VN', // Vietnamese locale
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+        partialResults: true,
+        onSoundLevelChange: _onSoundLevelChange,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _speechListening = true;
+          _speechText = '';
+        });
+      }
+    } catch (e) {
+      print('Error starting speech recognition: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể khởi động nhận diện giọng nói: $e'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
+  // Stop speech recognition
+  Future<void> _stopListening() async {
+    await _speechToText.stop();
+    if (mounted) {
+      setState(() {
+        _speechListening = false;
+      });
+    }
+  }
+
+  // Handle speech results
+  void _onSpeechResult(dynamic result) {
+    if (mounted) {
+      setState(() {
+        _speechText = result.recognizedWords;
+        _confidenceLevel = result.confidence;
+      });
+      
+      // Update text field with recognized speech
+      _messageController.text = _speechText;
+    }
+  }
+
+  // Handle sound level changes for animation
+  void _onSoundLevelChange(double level) {
+    // You can use this for visual feedback
+    if (mounted && _speechListening) {
+      // Animate based on sound level
+      _voiceAnimationController.animateTo(level / 100);
+    }
+  }
+
+  // Show permission dialog
+  void _showPermissionDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -72,17 +202,17 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.infoColor.withOpacity(0.1),
+                color: AppColors.warningColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(  
-                Icons.mic,
-                color: AppColors.infoColor, 
+              child: const Icon(
+                Icons.mic_off,
+                color: AppColors.warningColor,
                 size: 24,
               ),
             ),
             const SizedBox(width: AppStyles.spacingM),
-            const Text('Tính năng giọng nói'),
+            const Text('Cần quyền microphone'),
           ],
         ),
         content: const Column(
@@ -90,54 +220,58 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '🎤 Tính năng nhập liệu bằng giọng nói đang được phát triển',
+              'Để sử dụng tính năng nhập liệu bằng giọng nói, ứng dụng cần quyền truy cập microphone.',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                fontSize: 14,
+                color: AppColors.textSecondary,
               ),
             ),
             SizedBox(height: AppStyles.spacingM),
             Text(
-              'Tính năng này sẽ cho phép bạn:',
+              'Tính năng này sẽ giúp bạn:',
               style: TextStyle(
                 color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
               ),
             ),
             SizedBox(height: AppStyles.spacingS),
             Text(
               '• Nói thay vì gõ tin nhắn\n'
               '• Nhận diện giọng nói tiếng Việt\n'
-              '• Chuyển đổi giọng nói thành text\n'
               '• Tương tác nhanh hơn với AI',
               style: TextStyle(
                 color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
-            SizedBox(height: AppStyles.spacingM),
-            Text(
-              '⏰ Sẽ có trong bản cập nhật tiếp theo!',
-              style: TextStyle(
-                color: AppColors.successColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ],
         ),
         actions: [
-          ElevatedButton(
+          TextButton(
             onPressed: () => Navigator.pop(context),
+            child: const Text('Để sau'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final status = await Permission.microphone.request();
+              if (status.isGranted) {
+                await _initializeSpeech();
+                await _startListening();
+              }
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.infoColor,
+              backgroundColor: AppColors.successColor,
               foregroundColor: AppColors.textOnMain,
             ),
-            child: const Text('Đã hiểu'),
-          ), 
+            child: const Text('Cấp quyền'),
+          ),
         ],
       ),
     );
   }
+
+
 
   Future<void> _loadChatHistory() async {
     try {
@@ -199,7 +333,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         final record = FinanceRecord.fromJson(recordData);
         await _showSaveConfirmationDialog(record);
       }
-      
+
       // Nếu là order preview thành công, hiển thị popup xác nhận
       if (aiResponse.type == 'order' &&
           aiResponse.metadata != null &&
@@ -278,33 +412,33 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildRecordDetailRow(
-                      '💰 Doanh thu:', 
+                      '💰 Doanh thu:',
                       FormatUtils.formatCurrencyVND(record.doanhThu),
                       AppColors.successColor,
                     ),
                     const SizedBox(height: AppStyles.spacingS),
                     _buildRecordDetailRow(
-                      '💸 Chi phí:', 
+                      '💸 Chi phí:',
                       FormatUtils.formatCurrencyVND(record.chiPhi),
                       AppColors.errorColor,
                     ),
                     const SizedBox(height: AppStyles.spacingS),
                     _buildRecordDetailRow(
-                      '📊 Lợi nhuận:', 
+                      '📊 Lợi nhuận:',
                       FormatUtils.formatCurrencyVND(record.loiNhuan),
                       record.loiNhuan >= 0 ? AppColors.successColor : AppColors.errorColor,
                     ),
                     if (record.ghiChu.isNotEmpty) ...[
                       const SizedBox(height: AppStyles.spacingS),
                       _buildRecordDetailRow(
-                        '📝 Ghi chú:', 
+                        '📝 Ghi chú:',
                         record.ghiChu,
                         AppColors.textSecondary,
                       ),
                     ],
                     const SizedBox(height: AppStyles.spacingS),
                     _buildRecordDetailRow(
-                      '📅 Ngày:', 
+                      '📅 Ngày:',
                       FormatUtils.formatSimpleDate(record.ngayTao),
                       AppColors.textSecondary,
                     ),
@@ -767,67 +901,117 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
   }
 
-  Widget _buildVoiceButton() {
+    Widget _buildVoiceButton() {
     return Container(
       margin: const EdgeInsets.only(right: AppStyles.spacingS),
       child: GestureDetector(
-        onTap: _showVoiceComingSoonDialog,
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.infoColor,
-                AppColors.infoColor.withOpacity(0.8),
-              ],
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.infoColor.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+        onTap: _speechListening ? _stopListening : _startListening,
+        child: AnimatedBuilder(
+          animation: _voiceAnimationController,
+          builder: (context, child) {
+            return Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _speechListening
+                      ? [
+                          AppColors.errorColor,
+                          AppColors.errorColor.withOpacity(0.8),
+                        ]
+                      : _speechEnabled
+                          ? [
+                              AppColors.successColor,
+                              AppColors.successColor.withOpacity(0.8),
+                            ]
+                          : [
+                              AppColors.textSecondary,
+                              AppColors.textSecondary.withOpacity(0.8),
+                            ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: (_speechListening
+                            ? AppColors.errorColor
+                            : _speechEnabled
+                                ? AppColors.successColor
+                                : AppColors.textSecondary)
+                        .withOpacity(0.3),
+                    blurRadius: _speechListening ? 12 : 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              const Icon(
-                Icons.mic,
-                color: AppColors.textOnMain,
-                size: 24,
-              ),
-              // "Coming soon" indicator
-              Positioned(
-                top: 2,
-                right: 2,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.warningColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AnimatedScale(
+                    scale: _speechListening ? 1.0 + (_voiceAnimationController.value * 0.2) : 1.0,
+                    duration: const Duration(milliseconds: 100),
+                    child: Icon(
+                      _speechListening ? Icons.mic : Icons.mic_none,
                       color: AppColors.textOnMain,
-                      width: 1,
+                      size: 24,
                     ),
                   ),
-                  child: const Center(
-                    child: Text(
-                      '!',
-                      style: TextStyle(
-                        color: AppColors.textOnMain,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
+                  // Listening indicator
+                  if (_speechListening)
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: AppColors.textOnMain,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.errorColor,
+                            width: 1,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.circle,
+                            color: AppColors.errorColor,
+                            size: 6,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  // Disabled indicator
+                  if (!_speechEnabled && !_speechListening)
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: AppColors.warningColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.textOnMain,
+                            width: 1,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '!',
+                            style: TextStyle(
+                              color: AppColors.textOnMain,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -867,7 +1051,8 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                   '• Nhập dữ liệu tài chính\n'
                   '• Tạo báo cáo doanh thu\n'
                   '• Trả lời câu hỏi về kế toán\n'
-                  '• Phân tích dữ liệu',
+                  '• Phân tích dữ liệu\n'
+                  '🎤 Sử dụng giọng nói để tương tác',
               style: AppStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.5,
@@ -1063,31 +1248,93 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             ),
             child: Column(
               children: [
-                                  Row(
-                    children: [
-                      // _buildVoiceButton(),
-                      Expanded(
+                // Speech recognition feedback
+                if (_speechListening)
+                  Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingS),
+                    margin: const EdgeInsets.only(bottom: AppStyles.spacingS),
+                    decoration: BoxDecoration(
+                      color: AppColors.successColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                      border: Border.all(
+                        color: AppColors.successColor.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        AnimatedBuilder(
+                          animation: _voiceAnimationController,
+                          builder: (context, child) {
+                            return Icon(
+                              Icons.mic,
+                              color: AppColors.successColor,
+                              size: 16,
+                            );
+                          },
+                        ),
+                        const SizedBox(width: AppStyles.spacingS),
+                        Expanded(
+                          child: Text(
+                            _speechText.isEmpty 
+                                ? 'Đang nghe... Hãy nói điều gì đó' 
+                                : 'Đã nhận diện: "$_speechText"',
+                            style: TextStyle(
+                              color: AppColors.successColor,
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                        if (_confidenceLevel > 0)
+                          Text(
+                            '${(_confidenceLevel * 100).toInt()}%',
+                            style: TextStyle(
+                              color: AppColors.successColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                Row(
+                  children: [
+                    _buildVoiceButton(),
+                    Expanded(
                       child: TextField(
                         controller: _messageController,
-                        enabled: !_isLoading,
+                        enabled: !_isLoading && !_speechListening,
                         maxLines: null,
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _sendMessage(),
                         decoration: InputDecoration(
-                          hintText: 'Nhập tin nhắn ...',
-                                                      border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                              borderSide: const BorderSide(
-                                color: AppColors.borderLight,
-                              ),
+                          hintText: _speechListening 
+                              ? 'Đang nghe giọng nói...' 
+                              : 'Nhập tin nhắn hoặc nhấn mic để nói...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            borderSide: BorderSide(
+                              color: _speechListening 
+                                  ? AppColors.successColor 
+                                  : AppColors.borderLight,
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                              borderSide: const BorderSide(
-                                color: AppColors.mainColor, 
-                                width: 2,
-                              ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            borderSide: const BorderSide(
+                              color: AppColors.mainColor,
+                              width: 2,
                             ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            borderSide: BorderSide(
+                              color: _speechListening 
+                                  ? AppColors.successColor 
+                                  : AppColors.borderLight,
+                              width: _speechListening ? 2 : 1,
+                            ),
+                          ),
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppStyles.spacingM,
                             vertical: AppStyles.spacingS,
@@ -1122,7 +1369,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     final content = dialogData["content"] as String? ?? "";
     final positiveButton = dialogData["positive_button"] as String? ?? "Đồng ý";
     final negativeButton = dialogData["negative_button"] as String? ?? "Hủy";
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -1202,11 +1449,11 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   Future<void> _handleOrderConfirmation(bool confirmed, Map<String, dynamic> previewData) async {
     try {
       final aiResponse = await _aiService.handleOrderConfirmation(confirmed, previewData);
-      
+
       setState(() {
         _messages.add(aiResponse);
       });
-      
+
       // Cuộn xuống cuối
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
@@ -1217,7 +1464,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           );
         }
       });
-      
+
       // Hiển thị snackbar thành công nếu tạo đơn hàng
       if (confirmed && aiResponse.metadata?['order_created'] == true) {
         if (mounted) {
@@ -1246,19 +1493,19 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       final items = orderData["items"] as List<Map<String, dynamic>>;
       final customerName = orderData["customer_name"] as String;
       final note = orderData["note"] as String;
-      
+
       // Tạo order items từ matched products
       final List<OrderItem> orderItems = [];
       for (final item in items) {
         final product = item["product"];
         final quantity = item["quantity"];
         final matched = item["matched"];
-        
+
         if (matched && product != null) {
           orderItems.add(OrderItem.fromProduct(product, quantity));
         }
       }
-      
+
       if (orderItems.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1270,7 +1517,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         }
         return;
       }
-      
+
       // Tạo đơn hàng
       final order = Order(
         id: '',
@@ -1280,9 +1527,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         items: orderItems,
         note: note,
       );
-      
+
       final success = await _orderService.addOrder(order);
-      
+
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1299,7 +1546,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         );
       }
     } catch (e) {
-      print('Error creating order: $e');
+      print('Error creating order: $e'); 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1310,4 +1557,4 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       }
     }
   }
-} 
+}
