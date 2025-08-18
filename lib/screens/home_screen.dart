@@ -285,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 2,
                     ),
                   ),
-                  child: Icon(greetingIcon, size: 36, color: Colors.white),
+                  child: Icon(greetingIcon,size: MediaQuery.of(context).size.width * 0.05 ,color: Colors.white,),
                 ),
                 const SizedBox(width: AppStyles.spacingL),
                 Expanded(
@@ -329,23 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppStyles.spacingS),
-                    GestureDetector(
-                      onTap: _loadDashboardData,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppStyles.spacingM),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        child: const Icon(
-                          Icons.refresh_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ],
@@ -392,6 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Thống kê theo thời gian',
                 style: AppStyles.headingSmall.copyWith(
                   fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.of(context).size.width * 0.045,
                 ),
               ),
             ],
