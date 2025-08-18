@@ -14,7 +14,7 @@ class OrderItem {
   final String productName;
   final String productCode;
   final String unit;
-  final int quantity;
+  final double quantity;
   final double unitPrice; // giá bán
   final double costPrice; // giá vốn
   final String note;
@@ -62,7 +62,7 @@ class OrderItem {
       productName: json['productName'] ?? '',
       productCode: json['productCode'] ?? '',
       unit: json['unit'] ?? 'Cái',
-      quantity: json['quantity'] ?? 0,
+      quantity: (json['quantity'] ?? 0).toDouble(),
       unitPrice: (json['unitPrice'] ?? 0).toDouble(),
       costPrice: (json['costPrice'] ?? 0).toDouble(),
       note: json['note'] ?? '',
@@ -76,7 +76,7 @@ class OrderItem {
     String? productName,
     String? productCode,
     String? unit,
-    int? quantity,
+    double? quantity,
     double? unitPrice,
     double? costPrice,
     String? note,
@@ -95,7 +95,7 @@ class OrderItem {
   }
 
   // Tạo từ sản phẩm
-  factory OrderItem.fromProduct(Product product, int quantity, {String? note}) {
+  factory OrderItem.fromProduct(Product product, double quantity, {String? note}) {
     return OrderItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       productId: product.id,
@@ -108,11 +108,11 @@ class OrderItem {
       note: note ?? '',
     );
   }
-
+ 
   @override
   String toString() {
     return 'OrderItem(id: $id, productName: $productName, quantity: $quantity, unitPrice: $unitPrice, lineTotal: $lineTotal)';
-  }
+  } 
 
   @override
   bool operator ==(Object other) {
@@ -177,7 +177,7 @@ class Order {
   double get profit => total - totalCost;
 
   // Tính số lượng sản phẩm
-  int get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);
+  double get totalQuantity => items.fold(0.0, (sum, item) => sum + item.quantity);
 
   // Tính số loại sản phẩm
   int get totalItems => items.length;

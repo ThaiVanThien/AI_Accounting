@@ -12,11 +12,19 @@ import '../constants/app_styles.dart';
 import '../utils/format_utils.dart';
 import '../screens/order_list_screen.dart';
 import '../screens/customer_form_screen.dart';
+import '../main.dart';
 
 class OrderFormScreen extends StatefulWidget {
   final Order? order;
+  final bool returnToHome;
+  final bool hideFloatingButton;
 
-  const OrderFormScreen({super.key, this.order});
+  const OrderFormScreen({
+    super.key, 
+    this.order, 
+    this.returnToHome = false,  
+    this.hideFloatingButton = false,
+  });
 
   @override
   State<OrderFormScreen> createState() => _OrderFormScreenState();
@@ -167,6 +175,17 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   double get _totalCost => _items.fold(0, (sum, item) => sum + item.lineCostTotal);
   double get _profit => _total - _totalCost;
 
+  /// Format quantity hiển thị: decimal cho Kg, integer cho unit khác
+  String _formatQuantity(double quantity, String unit) {
+    if (unit.toLowerCase() == 'kg') {
+      // Remove trailing zeros for decimal
+      return quantity % 1 == 0 ? quantity.toInt().toString() : quantity.toString();
+    } else {
+      // Show as integer for other units
+      return quantity.toInt().toString();
+    }
+  }
+ 
   /// Trả về customer được chọn hợp lệ, đảm bảo luôn có trong danh sách items
   Customer _getValidSelectedCustomer() {
     // Nếu _selectedCustomer null hoặc _availableCustomers chưa được tải, trả về walk-in
@@ -287,7 +306,19 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               ),
             );
           }
-                       _resetForm();
+          
+          // Handle post-creation navigation
+          if (!_isEditMode) {
+            if (widget.returnToHome) {
+              // From OrderListScreen -> redirect to Home tab "Tạo đơn hàng"
+              _navigateToCreateOrderTab();
+            } else {
+              // From HomeScreen -> show dialog with options
+              _showSuccessDialog();
+            }
+          } else {
+            _resetForm();
+          }
         }
       } else {
         if (mounted) {
@@ -330,6 +361,184 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _generateOrderNumber();
   }
 
+  void _navigateToCreateOrderTab() {
+    // Clear all routes and navigate to MainScreen with tab "Tạo đơn hàng" (index 1)
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => const MainScreenWithTab(initialTab: 1),
+      ),
+      (route) => false, // Remove all previous routes
+    );
+  } 
+  
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
+        title: Row( 
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.successColor,
+                    AppColors.successColor.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.successColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Expanded(
+              child: Text(
+                'Đơn hàng đã tạo!',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                  color: AppColors.successColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingL),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.successColor.withOpacity(0.1),
+                    AppColors.successColor.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                border: Border.all(color: AppColors.successColor.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Text('🎉', style: TextStyle(fontSize: 24)),
+                  const SizedBox(width: AppStyles.spacingM),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Thành công!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.successColor,
+                          ),
+                        ),
+                        SizedBox(height: AppStyles.spacingXS),
+                        Text(
+                          'Đơn hàng đã được tạo và lưu vào hệ thống.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingL),
+            const Text(
+              'Bạn muốn làm gì tiếp theo?',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _resetForm(); // Reset form for new order
+            },
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Tạo đơn mới'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.mainColor,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingM,
+                vertical: AppStyles.spacingS,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OrderListScreen(),
+                ),
+              ).then((_) {
+                // Reload data when returning
+                _loadCustomers();
+                _loadProducts();
+              });
+            },
+            icon: const Icon(Icons.list, size: 18),
+            label: const Text('Xem danh sách'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.infoColor,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingM,
+                vertical: AppStyles.spacingS,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Return to previous screen
+            },
+            icon: const Icon(Icons.arrow_back, size: 18),
+            label: const Text('Quay lại'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.successColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addProduct() {
     if (_availableProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -367,35 +576,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
      );
    }
 
-   void _editOrderItem(int index) {
-    final item = _items[index];
-    final product = _availableProducts.firstWhere(
-      (p) => p.id == item.productId,
-      orElse: () => Product(
-        id: item.productId,
-        code: item.productCode,
-        name: item.productName,
-        sellingPrice: item.unitPrice,
-        costPrice: item.costPrice,
-        unit: item.unit,
-      ),
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => _OrderItemEditDialog(
-        item: item,
-        product: product,
-        onItemUpdated: (updatedItem) {
-          setState(() {
-            _items[index] = updatedItem;
-          });
-          // Force rebuild để cập nhật UI ngay lập tức
-          setState(() {});
-        },
-      ),
-    );
-  }
 
   void _removeOrderItem(int index) {
     setState(() {
@@ -406,66 +586,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   }
 
   Widget _buildOrderItemCard(OrderItem item, int index) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: AppStyles.spacingM),
       decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: BorderRadius.circular(AppStyles.radiusM),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(AppStyles.spacingM),
-        title: Text(
-          item.productName,
-          style: AppStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppStyles.spacingXS),
-            Text('Mã: ${item.productCode}'),
-            const SizedBox(height: AppStyles.spacingXS),
-            Row(
-              children: [
-                Text('${item.quantity} ${item.unit}'),
-                const Text(' × '),
-                Text('${FormatUtils.formatCurrency(item.unitPrice)} VNĐ'),
-                const Text(' = '),
-                Text(
-                  '${FormatUtils.formatCurrency(item.lineTotal)} VNĐ',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.successColor,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () => _editOrderItem(index),
-              icon: const Icon(Icons.edit, size: 20),
-              color: AppColors.infoColor,
-            ),
-            IconButton(
-              onPressed: () => _removeOrderItem(index),
-              icon: const Icon(Icons.delete, size: 20),
-              color: AppColors.errorColor,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderSummary() {
-    return Container(
-      padding: const EdgeInsets.all(AppStyles.spacingL),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppStyles.radiusL),
         border: Border.all(color: AppColors.borderLight),
         boxShadow: const [
@@ -476,37 +602,189 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
         ],
       ),
+      child: Padding(
+        padding: EdgeInsets.all(isSmallScreen ? AppStyles.spacingM : AppStyles.spacingL),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.productName,
+                    style: AppStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: isSmallScreen ? 14 : 16,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(AppStyles.spacingS),
+                  decoration: BoxDecoration(
+                    color: AppColors.errorColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                  ),
+                  child: InkWell(
+                    onTap: () => _removeOrderItem(index),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: isSmallScreen ? 18 : 20,
+                      color: AppColors.errorColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppStyles.spacingS),
+            Text(
+              'Mã: ${item.productCode}',
+              style: AppStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: isSmallScreen ? 11 : 12,
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingS),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingS),
+              decoration: BoxDecoration(
+                color: AppColors.successColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'SL: ${_formatQuantity(item.quantity, item.unit)} ${item.unit}',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 11 : 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Giá: ${FormatUtils.formatCurrency(item.unitPrice)}',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 11 : 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.right,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppStyles.spacingXS),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: AppStyles.spacingXS),
+                    decoration: BoxDecoration(
+                      color: AppColors.successColor,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                    ),
+                    child: Text(
+                      'Thành tiền: ${FormatUtils.formatCurrency(item.lineTotal)} VNĐ',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 12 : 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrderSummary() {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
+    return Container(
+      padding: EdgeInsets.all(
+        isSmallScreen ? AppStyles.spacingM : AppStyles.spacingL,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowMedium,
+            blurRadius: 20,
+            offset: Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          // Header row - responsive
+          Column(
             children: [
-              Icon(Icons.receipt, color: AppColors.infoColor, size: 24),
-              const SizedBox(width: AppStyles.spacingS),
-              Text(
-                'Tổng kết đơn hàng',
-                style: AppStyles.headingSmall,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingS),
+                    decoration: BoxDecoration(
+                      color: AppColors.infoColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                    ),
+                    child: Icon(
+                      Icons.receipt_long, 
+                      color: AppColors.infoColor, 
+                      size: isSmallScreen ? 20 : 24,
+                    ),
+                  ),
+                  const SizedBox(width: AppStyles.spacingS),
+                  Expanded(
+                    child: Text(
+                      'Tổng kết đơn hàng',
+                      style: AppStyles.headingSmall.copyWith(
+                        fontSize: isSmallScreen ? 16 : 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              const Spacer(),
-              // Hiển thị số lượng sản phẩm real-time
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppStyles.spacingS,
-                  vertical: AppStyles.spacingXS,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.infoColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppStyles.radiusS),
-                  border: Border.all(color: AppColors.infoColor.withOpacity(0.3)),
-                ),
-                child: Text(
-                  '${_items.length} sản phẩm',
-                  style: AppStyles.bodySmall.copyWith(
-                    color: AppColors.infoColor,
-                    fontWeight: FontWeight.w600,
+              if (_items.isNotEmpty) ...[
+                const SizedBox(height: AppStyles.spacingS),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppStyles.spacingM,
+                    vertical: AppStyles.spacingS,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.infoColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                    border: Border.all(color: AppColors.infoColor.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '${_items.length} sản phẩm',
+                    style: AppStyles.bodySmall.copyWith(
+                      color: AppColors.infoColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: AppStyles.spacingL),
@@ -536,9 +814,9 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           
           // Hiển thị thông báo nếu không có sản phẩm
           if (_items.isEmpty) ...[
-            const SizedBox(height: AppStyles.spacingM),
+            SizedBox(height: isSmallScreen ? AppStyles.spacingS : AppStyles.spacingM),
             Container(
-              padding: const EdgeInsets.all(AppStyles.spacingM),
+              padding: EdgeInsets.all(isSmallScreen ? AppStyles.spacingS : AppStyles.spacingM),
               decoration: BoxDecoration(
                 color: AppColors.warningColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppStyles.radiusM),
@@ -549,7 +827,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                   Icon(
                     Icons.info_outline,
                     color: AppColors.warningColor,
-                    size: 20,
+                    size: isSmallScreen ? 18 : 20,
                   ),
                   const SizedBox(width: AppStyles.spacingS),
                   Expanded(
@@ -558,7 +836,9 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                       style: AppStyles.bodyMedium.copyWith(
                         color: AppColors.warningColor,
                         fontStyle: FontStyle.italic,
+                        fontSize: isSmallScreen ? 12 : 14,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -571,26 +851,43 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   }
 
   Widget _buildSummaryRow(String label, double value, {bool isTotal = false, Color? color, String suffix = 'VNĐ'}) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 3 : 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              fontSize: isTotal ? 16 : 14,
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
+                fontSize: isSmallScreen 
+                    ? (isTotal ? 14 : 12)
+                    : (isTotal ? 16 : 14),
+                color: AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Text(
-            suffix == '%' 
-                ? '${value.toStringAsFixed(1)}$suffix'
-                : '${FormatUtils.formatCurrency(value)} $suffix',
-            style: TextStyle(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-              fontSize: isTotal ? 16 : 14,
-              color: color ?? (isTotal ? AppColors.textPrimary : AppColors.successColor),
+          const SizedBox(width: AppStyles.spacingS),
+          Expanded(
+            flex: 2,
+            child: Text(
+              suffix == '%' 
+                  ? '${value.toStringAsFixed(1)}$suffix'
+                  : '${FormatUtils.formatCurrency(value)} $suffix',
+              style: TextStyle(
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+                fontSize: isSmallScreen 
+                    ? (isTotal ? 14 : 12)
+                    : (isTotal ? 16 : 14),
+                color: color ?? (isTotal ? AppColors.mainColor : AppColors.successColor),
+              ),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -600,34 +897,61 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Sửa đơn hàng' : 'Tạo đơn hàng'),
-        backgroundColor: AppColors.mainColor,
-        foregroundColor: AppColors.textOnMain,
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                _isEditMode ? 'Sửa đơn hàng' : 'Tạo đơn hàng',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+           color: AppColors.mainColor
+          ),
+        ),
         actions: [
           if (!_isEditMode)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _generateOrderNumber,
-              tooltip: 'Tạo số đơn mới',
+            Container(
+              margin: const EdgeInsets.only(right: AppStyles.spacingM),
+              child: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(AppStyles.spacingS),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                  ),
+                  child: const Icon(Icons.refresh, size: 20),
+                ),
+                onPressed: _generateOrderNumber,
+                tooltip: 'Tạo số đơn mới',
+              ),
             ),
         ],
       ),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.backgroundPrimary,
-              AppColors.backgroundSecondary,
-            ],
-          ),
+          gradient: AppColors.backgroundGradient,
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppStyles.spacingM),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(
+              isSmallScreen ? AppStyles.spacingS : AppStyles.spacingM,
+            ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -955,7 +1279,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                                  // Hiển thị thông tin real-time
                                  if (_items.isNotEmpty)
                                    Text(
-                                     '${_items.length} sản phẩm • ${_items.fold(0, (sum, item) => sum + item.quantity)} đơn vị • ${FormatUtils.formatCurrency(_subtotal)} VNĐ',
+                                     '${_items.length} sản phẩm • ${_items.fold(0.0, (sum, item) => sum + item.quantity).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')} đơn vị • ${FormatUtils.formatCurrency(_subtotal)} VNĐ',
                                      style: AppStyles.bodySmall.copyWith(
                                        color: AppColors.textSecondary,
                                      ),
@@ -1014,16 +1338,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                                   color: AppColors.textSecondary,
                                 ),
                                 textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: AppStyles.spacingM),
-                              OutlinedButton.icon(
-                                onPressed: _isLoadingProducts ? null : _addProduct,
-                                icon: const Icon(Icons.add_shopping_cart, size: 18),
-                                label: const Text('Thêm sản phẩm đầu tiên'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.mainColor,
-                                  side: BorderSide(color: AppColors.mainColor),
-                                ),
                               ),
                             ],
                           ),
@@ -1147,11 +1461,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                 // Order Summary
                 _buildOrderSummary(),
 
-                const SizedBox(height: AppStyles.spacingXL),
+                SizedBox(height: MediaQuery.of(context).size.height < 700 ? AppStyles.spacingL : AppStyles.spacingXL),
 
                 // Save Button
                 Container(
-                  height: 56,
+                  height: MediaQuery.of(context).size.height < 700 ? 48 : 56,
                   decoration: BoxDecoration(
                     gradient: AppColors.mainGradient,
                     borderRadius: BorderRadius.circular(AppStyles.radiusM),
@@ -1203,7 +1517,8 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
         ),
       ),
-             floatingActionButton: FloatingActionButton.extended(
+      ),
+             floatingActionButton: widget.hideFloatingButton ? null : FloatingActionButton.extended(
          onPressed: () {
            Navigator.push(
              context,
@@ -1242,7 +1557,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 // Product Selection Dialog
 class _ProductSelectionDialog extends StatefulWidget {
   final List<Product> products;
-  final Function(Product, int) onProductSelected;
+  final Function(Product, double) onProductSelected;
 
   const _ProductSelectionDialog({
     required this.products,
@@ -1296,11 +1611,24 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
       return;
     }
 
-    final quantity = int.tryParse(_quantityController.text);
+    final quantityText = _quantityController.text;
+    final quantity = double.tryParse(quantityText);
+    
     if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vui lòng nhập số lượng hợp lệ'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+      return;
+    }
+    
+    // Validate: non-Kg units should not have decimal values
+    if (_selectedProduct!.unit.toLowerCase() != 'kg' && quantity % 1 != 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_selectedProduct!.unit} không thể có số lẻ. Vui lòng nhập số nguyên.'),
           backgroundColor: AppColors.errorColor,
         ),
       );
@@ -1318,8 +1646,13 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
         borderRadius: BorderRadius.circular(AppStyles.radiusL),
       ),
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 600),
-        padding: const EdgeInsets.all(AppStyles.spacingL),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+          maxWidth: MediaQuery.of(context).size.width * 0.95,
+        ),
+        padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1372,13 +1705,41 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                       ),
                     ),
                     child: ListTile(
-                      title: Text(product.name),
+                      title: Text(
+                        product.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Mã: ${product.code}'),
-                          Text('Giá: ${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ'),
-                          Text('Tồn kho: ${product.stockQuantity} ${product.unit}'),
+                          Text(
+                            'Mã: ${product.code}',
+                            style: const TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Giá: ${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.successColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Tồn kho: ${product.stockQuantity} ${product.unit}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: product.stockQuantity > 0 
+                                  ? AppColors.textSecondary 
+                                  : AppColors.errorColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                       onTap: () {
@@ -1403,20 +1764,21 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                 Expanded(
                   child: TextFormField(
                     controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
                       isDense: true,
+                      suffixText: _selectedProduct?.unit,
                     ),
                   ),
                 ),
               ],
             ),
             
-            const SizedBox(height: AppStyles.spacingL),
+            const SizedBox(height: AppStyles.spacingL), 
             
-            // Actions
+            // Actions 
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -1462,9 +1824,20 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
   @override
   void initState() {
     super.initState();
-    _quantityController = TextEditingController(text: widget.item.quantity.toString());
+    _quantityController = TextEditingController(text: _formatQuantityForInput(widget.item.quantity, widget.item.unit));
     _unitPriceController = TextEditingController(text: FormatUtils.formatCurrency(widget.item.unitPrice));
     _noteController = TextEditingController(text: widget.item.note);
+  }
+
+  /// Format quantity for input field: decimal cho Kg, integer cho unit khác
+  String _formatQuantityForInput(double quantity, String unit) {
+    if (unit.toLowerCase() == 'kg') {
+      // Keep decimal if needed
+      return quantity % 1 == 0 ? quantity.toInt().toString() : quantity.toString();
+    } else {
+      // Always show as integer for other units
+      return quantity.toInt().toString();
+    }
   }
 
   @override
@@ -1476,13 +1849,25 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
   }
 
   void _saveChanges() {
-    final quantity = int.tryParse(_quantityController.text);
+    final quantityText = _quantityController.text;
+    final quantity = double.tryParse(quantityText);
     final unitPrice = FormatUtils.parseCurrency(_unitPriceController.text);
 
     if (quantity == null || quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Vui lòng nhập số lượng hợp lệ'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+      return;
+    }
+    
+    // Validate: non-Kg units should not have decimal values
+    if (widget.item.unit.toLowerCase() != 'kg' && quantity % 1 != 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${widget.item.unit} không thể có số lẻ. Vui lòng nhập số nguyên.'),
           backgroundColor: AppColors.errorColor,
         ),
       );
@@ -1511,7 +1896,9 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final quantity = int.tryParse(_quantityController.text) ?? 0;
+    final quantityText = _quantityController.text;
+    final quantity = double.tryParse(quantityText) ?? 0;
+    
     final unitPrice = FormatUtils.parseCurrency(_unitPriceController.text);
     final lineTotal = quantity * unitPrice;
 
@@ -1520,7 +1907,12 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
         borderRadius: BorderRadius.circular(AppStyles.radiusL),
       ),
       child: Container(
-        padding: const EdgeInsets.all(AppStyles.spacingL),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.95,
+        ),
+        padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1540,18 +1932,18 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               ],
             ),
             const SizedBox(height: AppStyles.spacingM),
-            
+
             Text(
               widget.item.productName,
               style: AppStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
             ),
             Text('Mã: ${widget.item.productCode}'),
             const SizedBox(height: AppStyles.spacingL),
-            
+
             TextFormField(
               controller: _quantityController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
               decoration: InputDecoration(
                 labelText: 'Số lượng',
                 suffixText: widget.item.unit,
@@ -1560,7 +1952,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               onChanged: (value) => setState(() {}),
             ),
             const SizedBox(height: AppStyles.spacingM),
-            
+
             TextFormField(
               controller: _unitPriceController,
               keyboardType: TextInputType.number,
@@ -1573,7 +1965,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               onChanged: (value) => setState(() {}),
             ),
             const SizedBox(height: AppStyles.spacingM),
-            
+
             TextFormField(
               controller: _noteController,
               decoration: const InputDecoration(
@@ -1583,7 +1975,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               maxLines: 2,
             ),
             const SizedBox(height: AppStyles.spacingL),
-            
+
             Container(
               padding: const EdgeInsets.all(AppStyles.spacingM),
               decoration: BoxDecoration(
@@ -1605,7 +1997,7 @@ class _OrderItemEditDialogState extends State<_OrderItemEditDialog> {
               ),
             ),
             const SizedBox(height: AppStyles.spacingL),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

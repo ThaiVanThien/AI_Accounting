@@ -98,19 +98,121 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa sản phẩm "${product.name}"?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingS),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+              ),
+              child: const Icon(
+                Icons.delete_outline,
+                color: AppColors.errorColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Expanded(
+              child: Text(
+                'Xác nhận xóa sản phẩm',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+                children: [
+                  const TextSpan(text: 'Bạn có chắc muốn xóa sản phẩm '),
+                  TextSpan(
+                    text: '"${product.name}"',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.mainColor,
+                    ),
+                  ),
+                  const TextSpan(text: '?'),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                color: AppColors.warningColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                border: Border.all(color: AppColors.warningColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber,
+                    color: AppColors.warningColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppStyles.spacingS),
+                  const Expanded(
+                    child: Text(
+                      'Hành động này sẽ xóa vĩnh viễn sản phẩm khỏi hệ thống!',
+                      style: TextStyle(
+                        color: AppColors.warningColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.delete, size: 18),
+            label: const Text('Xóa sản phẩm'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
             ),
-            child: const Text('Xóa'),
           ),
         ],
       ),
@@ -141,124 +243,6 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
     }
   }
 
-  void _showProductDetails(Product product) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        titlePadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-        contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-        backgroundColor: Colors.white,
-        title: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                child: Row(
-                  children: [
-                    Icon(Icons.inventory_2, color: AppColors.mainColorDark, size: 24),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, size: 20, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
-          ],
-        ),
-
-        content: Container(
-          width: 500,
-          color: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow(Icons.confirmation_number, 'Mã sản phẩm:', product.code),
-                  _buildDetailRow(Icons.sell, 'Giá bán:', '${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ'),
-                  _buildDetailRow(Icons.attach_money, 'Giá vốn:', '${FormatUtils.formatCurrency(product.costPrice)} VNĐ'),
-                  _buildDetailRow(Icons.trending_up, 'Lợi nhuận:',
-                      '${FormatUtils.formatCurrency(product.profitPerUnit)} VNĐ (${product.profitMargin.toStringAsFixed(1)}%)'),
-                  const Divider(),
-                  _buildDetailRow(Icons.straighten, 'Đơn vị:', product.unit),
-                  _buildDetailRow(Icons.category, 'Nhóm hàng:', product.category.isEmpty ? 'Chưa phân loại' : product.category),
-                  const Divider(),
-                  _buildDetailRow(Icons.inventory, 'Tồn kho:', '${product.stockQuantity} ${product.unit}'),
-                  _buildDetailRow(Icons.warning_amber, 'Tồn kho tối thiểu:', '${product.minStockLevel} ${product.unit}'),
-                  _buildDetailRow(Icons.account_balance_wallet, 'Giá trị tồn kho:', '${FormatUtils.formatCurrency(product.stockValue)} VNĐ'),
-                  const Divider(),
-                  _buildDetailRow(Icons.check_circle, 'Trạng thái:', product.isActive ? 'Đang bán' : 'Ngừng bán'),
-                  if (product.description.isNotEmpty)
-                    _buildDetailRow(Icons.notes, 'Mô tả:', product.description),
-                  if (product.isLowStock)
-                    Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning, color: Colors.orange, size: 22),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'Cảnh báo: Tồn kho thấp',
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          /*TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
-          ),*/
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _editProduct(product);
-            },
-            child: const Icon(Icons.edit),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Padding(
@@ -357,46 +341,71 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
           Row(
             children: [
               Expanded(
-                child: CheckboxListTile(
-                  title: const Text('Đang bán'),
-                  value: _showActiveOnly,
-                  onChanged: (value) {
-                    setState(() {
-                      _showActiveOnly = value ?? true;
-                    });
-                    _applyFilters();
-                  },
-                  dense: true,
-                  activeColor: AppColors.mainColor,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: _showActiveOnly,
+                      onChanged: (value) {
+                        setState(() {
+                          _showActiveOnly = value ?? true;
+                        });
+                        _applyFilters();
+                      },
+                      activeColor: AppColors.mainColor,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    const SizedBox(width: 4),
+                    const Flexible(
+                      child: Text(
+                        'Đang bán',
+                        style: TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(width: 8),
               Expanded(
-                child: CheckboxListTile(
-                  title: const Text('Tồn kho thấp'),
-                  value: _showLowStockOnly,
-                  onChanged: (value) {
-                    setState(() {
-                      _showLowStockOnly = value ?? false;
-                    });
-                    _applyFilters();
-                  },
-                  dense: true,
-                  activeColor: AppColors.warningColor,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      value: _showLowStockOnly,
+                      onChanged: (value) {
+                        setState(() {
+                          _showLowStockOnly = value ?? false;
+                        });
+                        _applyFilters();
+                      },
+                      activeColor: AppColors.warningColor,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    const SizedBox(width: 4),
+                    const Flexible(
+                      child: Text(
+                        'Tồn kho thấp',
+                        style: TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
+    ); 
   }
 
   Widget _buildProductCard(Product product) {
     final isLowStock = product.isLowStock;
     
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppStyles.spacingM,
+      margin: EdgeInsets.symmetric(
+        horizontal: MediaQuery.of(context).size.width < 600 ? AppStyles.spacingS : AppStyles.spacingM,
         vertical: AppStyles.spacingS,
       ),
       decoration: BoxDecoration(
@@ -418,7 +427,6 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppStyles.radiusL),
-          onTap: () => _showProductDetails(product),
           child: Padding(
             padding: const EdgeInsets.all(AppStyles.spacingM),
             child: Column(

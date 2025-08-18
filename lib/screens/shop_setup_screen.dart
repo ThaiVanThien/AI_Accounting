@@ -676,7 +676,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> with TickerProviderSt
               // Content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: EdgeInsets.all(
+                    MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: FadeTransition(

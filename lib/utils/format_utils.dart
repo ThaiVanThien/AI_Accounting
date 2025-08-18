@@ -76,8 +76,9 @@ class FormatUtils {
   // Parse currency string back to double
   static double parseCurrency(String value) {
     try {
-      // Remove all non-digits and dots
-      final cleanValue = value.replaceAll(RegExp(r'[^\d.]'), '');
+      // Remove all non-digits (including commas, spaces, currency symbols)
+      final cleanValue = value.replaceAll(RegExp(r'[^\d]'), '');
+      if (cleanValue.isEmpty) return 0.0;
       return double.parse(cleanValue);
     } catch (e) {
       return 0.0;
@@ -94,7 +95,7 @@ class CurrencyInputFormatter extends TextInputFormatter {
   ) {
     // Only allow digits
     final newText = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     if (newText.isEmpty) {
       return const TextEditingValue(
         text: '',

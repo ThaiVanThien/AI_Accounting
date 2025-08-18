@@ -362,7 +362,7 @@ class AIService {
       
       for (final item in matchedItems) {
         final product = item["product"] as Product?; 
-        final quantity = item["quantity"] as int? ?? 0;
+        final quantity = item["quantity"] as double? ?? 0;
         
         if (product == null || quantity <= 0) {
           continue; // Bỏ qua item không hợp lệ
@@ -644,7 +644,7 @@ $itemsPreview${unmatchedPreview}
       
       for (final item in items) {
         final product = item["product"] as Product?;
-        final quantity = item["quantity"] as int? ?? 0;
+        final quantity = item["quantity"] as double? ?? 0;
         
         if (product == null || quantity <= 0) {
           continue; // Bỏ qua item không hợp lệ

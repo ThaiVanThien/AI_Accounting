@@ -288,9 +288,9 @@ class OrderService {
     try {
       for (final item in order.items) {
         if (increase) {
-          await _productService.increaseStock(item.productId, item.quantity);
+          await _productService.increaseStock(item.productId, item.quantity.round());
         } else {
-          await _productService.reduceStock(item.productId, item.quantity);
+          await _productService.reduceStock(item.productId, item.quantity.round());
         }
       }
     } catch (e) {
@@ -310,7 +310,7 @@ class OrderService {
     
     double totalRevenue = 0;
     double totalProfit = 0;
-    int totalItems = 0;
+    double totalItems = 0;
     
     for (final order in orders) {
       if (order.status == OrderStatus.paid) {
@@ -341,7 +341,7 @@ class OrderService {
     double totalRevenue = 0;
     double totalCost = 0;
     double totalProfit = 0;
-    int totalItems = 0;
+    double totalItems = 0;
     
     for (final order in paidOrders) {
       totalRevenue += order.total;

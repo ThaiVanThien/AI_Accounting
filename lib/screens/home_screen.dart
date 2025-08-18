@@ -204,113 +204,236 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWelcomeHeader() {
     final hour = DateTime.now().hour;
+    final now = DateTime.now();
     String greeting;
+    String timeEmoji;
     IconData greetingIcon;
-    Color greetingGradientStart;
-    Color greetingGradientEnd;
+    List<Color> gradientColors;
 
     if (hour < 12) {
-      greeting = 'Chào buổi sáng!';
-      greetingIcon = Icons.wb_sunny;
-      greetingGradientStart = const Color(0xFFFFB74D);
-      greetingGradientEnd = const Color(0xFFFF8A65);
+      greeting = 'Chào buổi sáng';
+      timeEmoji = '🌅';
+      greetingIcon = Icons.wb_sunny_outlined;
+      gradientColors = [
+        const Color(0xFFFF9500),
+        const Color(0xFFFFB84D),
+        const Color(0xFFFFD93D),
+      ];
     } else if (hour < 18) {
-      greeting = 'Chào buổi chiều!';
-      greetingIcon = Icons.wb_cloudy;
-      greetingGradientStart = const Color(0xFF64B5F6);
-      greetingGradientEnd = const Color(0xFF42A5F5);
+      greeting = 'Chào buổi chiều';
+      timeEmoji = '☀️';
+      greetingIcon = Icons.wb_sunny;
+      gradientColors = [
+        const Color(0xFF4FC3F7),
+        const Color(0xFF29B6F6),
+        const Color(0xFF03A9F4),
+      ];
     } else {
-      greeting = 'Chào buổi tối!';
-      greetingIcon = Icons.nights_stay;
-      greetingGradientStart = const Color(0xFF7986CB);
-      greetingGradientEnd = const Color(0xFF5C6BC0);
+      greeting = 'Chào buổi tối';
+      timeEmoji = '🌙';
+      greetingIcon = Icons.nights_stay_outlined;
+      gradientColors = [
+        const Color(0xFF7E57C2),
+        const Color(0xFF9575CD),
+        const Color(0xFFB39DDB),
+      ];
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppStyles.spacingM),
+      margin: const EdgeInsets.only(bottom: AppStyles.spacingL),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [greetingGradientStart, greetingGradientEnd],
+          colors: gradientColors,
+          stops: const [0.0, 0.5, 1.0],
         ),
         borderRadius: BorderRadius.circular(AppStyles.radiusXL),
         boxShadow: [
           BoxShadow(
-            color: greetingGradientStart.withOpacity(0.3),
-            blurRadius: 20,
+            color: gradientColors[0].withOpacity(0.4),
+            blurRadius: 24,
             offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: gradientColors[1].withOpacity(0.2),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: 0,
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Background pattern
-          Positioned(
-            right: -20,
-            top: -20,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 20,
-            bottom: -10,
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          // Content
-          Padding(
-            padding: const EdgeInsets.all(AppStyles.spacingXL),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(AppStyles.radiusXL),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(greetingIcon,size: MediaQuery.of(context).size.width * 0.05 ,color: Colors.white,),
-                ),
-                const SizedBox(width: AppStyles.spacingL),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        greeting,
-                        style: AppStyles.headingMedium.copyWith(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: AppStyles.spacingXS),
-                      Text(
-                        'Hôm nay là ${DateFormat('EEEE, dd/MM/yyyy', 'vi').format(DateTime.now())}',
-                        style: AppStyles.bodyMedium.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
-                        ),
-                      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        child: Stack(
+          children: [
+            // Animated background patterns
+            Positioned(
+              right: -40,
+              top: -40,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.15),
+                      Colors.white.withOpacity(0.05),
+                      Colors.transparent,
                     ],
                   ),
+                  shape: BoxShape.circle,
                 ),
+              ),
+            ),
+            Positioned(
+              right: 30,
+              bottom: -30,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.white.withOpacity(0.03),
+                      Colors.transparent,
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              left: -20,
+              bottom: -20,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.08),
+                      Colors.transparent,
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            
+            // Main content
+            Padding(
+              padding: EdgeInsets.all(isSmallScreen ? AppStyles.spacingL : AppStyles.spacingXL),
+              child: Row(
+                children: [
+                  // Icon container with improved design
+                  Container(
+                    padding: EdgeInsets.all(isSmallScreen ? AppStyles.spacingM : AppStyles.spacingL),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.25),
+                          Colors.white.withOpacity(0.15),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      greetingIcon,
+                      size: isSmallScreen ? 32 : 36,
+                      color: Colors.white,
+                    ),
+                  ),
+                  
+                  SizedBox(width: isSmallScreen ? AppStyles.spacingM : AppStyles.spacingL),
+                  
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                greeting,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isSmallScreen ? 20 : 26,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                  height: 1.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: AppStyles.spacingS),
+                            Text(
+                              timeEmoji,
+                              style: TextStyle(fontSize: isSmallScreen ? 20 : 24),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: AppStyles.spacingXS),
+                        
+                        Text(
+                          DateFormat('EEEE, dd/MM/yyyy', 'vi').format(now),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: isSmallScreen ? 14 : 16,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        
+                        const SizedBox(height: AppStyles.spacingXS),
+                        
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppStyles.spacingS,
+                            vertical: AppStyles.spacingXS,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                          ),
+                          child: Text(
+                            'Chúc bạn một ngày kinh doanh thành công!',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.95),
+                              fontSize: isSmallScreen ? 12 : 13,
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 Row(
                   children: [
                     GestureDetector(
@@ -337,6 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      )
     );
   }
  
@@ -363,10 +487,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(AppStyles.spacingS),
                 decoration: BoxDecoration(
                   color: AppColors.mainColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppStyles.radiusM), 
+                  borderRadius: BorderRadius.circular(AppStyles.radiusM),  
                 ),
-                child: Icon(
-                  Icons.analytics_rounded,
+                child: Icon( 
+                  Icons.analytics_rounded, 
                   size: 20,
                   color: AppColors.mainColor,
                 ),
@@ -743,9 +867,9 @@ class _HomeScreenState extends State<HomeScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: 2,
-          crossAxisSpacing: AppStyles.spacingL,
-          mainAxisSpacing: AppStyles.spacingL,
-          childAspectRatio: 1.1,
+          crossAxisSpacing: AppStyles.spacingM,
+          mainAxisSpacing: AppStyles.spacingM,
+          childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.0 : 1.1,
           children: [
             _buildActionCard(
               title: 'Danh sách đơn hàng',
@@ -846,14 +970,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               // Content
               Padding(
-                padding: const EdgeInsets.all(AppStyles.spacingL),
+                padding: const EdgeInsets.all(AppStyles.spacingM),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(AppStyles.spacingL),
+                        padding: const EdgeInsets.all(AppStyles.spacingM),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -861,26 +985,30 @@ class _HomeScreenState extends State<HomeScreen> {
                             colors: [color, color.withOpacity(0.8)],
                           ),
                           borderRadius: BorderRadius.circular(
-                            AppStyles.radiusXL,
+                            AppStyles.radiusL,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: color.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: Icon(icon, color: Colors.white, size: MediaQuery.of(context).size.width * 0.062,),
+                        child: Icon(icon, color: Colors.white, size: 28),
                       ),
-                      const SizedBox(height: AppStyles.spacingL),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: AppStyles.bodyMedium.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.3,
+                      const SizedBox(height: AppStyles.spacingM),
+                      Flexible(
+                        child: Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: AppStyles.bodySmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(height: AppStyles.spacingXS),
@@ -1455,7 +1583,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const OrderFormScreen()),
-          ),
+          ).then((_) => _loadDashboardData()),
         ),
       );
     }

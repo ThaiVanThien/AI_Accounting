@@ -49,5 +49,9 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>This app needs access to microphone to convert speech to text for AI chat feature.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>This app needs speech recognition to convert your voice to text for AI chat.</string>
 	</dict>
 </plist>

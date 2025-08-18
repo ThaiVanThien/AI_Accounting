@@ -61,16 +61,111 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận'),
-        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử chat?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingS),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+              ),
+              child: const Icon(
+                Icons.delete_forever,
+                color: AppColors.errorColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Expanded(
+              child: Text(
+                'Xác nhận xóa',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Bạn có chắc muốn xóa toàn bộ lịch sử chat?',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                border: Border.all(color: AppColors.errorColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber,
+                    color: AppColors.errorColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppStyles.spacingS),
+                  const Expanded(
+                    child: Text(
+                      'Hành động này không thể hoàn tác!',
+                      style: TextStyle(
+                        color: AppColors.errorColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.errorColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
+            ),
+            child: const Text(
+              'Xóa',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -89,17 +184,111 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Xuất dữ liệu'),
-          content: SingleChildScrollView(
-            child: SelectableText(
-              const JsonEncoder.withIndent('  ').convert(data),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppStyles.spacingS),
+                decoration: BoxDecoration(
+                  color: AppColors.infoColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                ),
+                child: const Icon(
+                  Icons.file_download,
+                  color: AppColors.infoColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppStyles.spacingM),
+              const Expanded(
+                child: Text(
+                  'Xuất dữ liệu JSON',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppStyles.spacingM),
+                  decoration: BoxDecoration(
+                    color: AppColors.infoColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                    border: Border.all(color: AppColors.infoColor.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        color: AppColors.infoColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppStyles.spacingS),
+                      const Expanded(
+                        child: Text(
+                          'Dữ liệu được xuất dưới định dạng JSON. Bạn có thể sao chép và lưu vào file.',
+                          style: TextStyle(
+                            color: AppColors.infoColor,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppStyles.spacingM),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(AppStyles.spacingM),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundLight,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: SingleChildScrollView(
+                      child: SelectableText(
+                        const JsonEncoder.withIndent('  ').convert(data),
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           actions: [
-            TextButton(
+            ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Đóng'),
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('Đóng'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.infoColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppStyles.spacingL,
+                  vertical: AppStyles.spacingM,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                ),
+              ),
             ),
           ],
         ),
@@ -355,35 +544,109 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Lịch sử Chat'),
-        backgroundColor: AppColors.mainColor,
+        title: const Text(
+          'Lịch sử Chat AI',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF667EEA),
+                Color(0xFF764BA2),
+                Color(0xFF6B73FF),
+              ],
+            ),
+          ),
+        ),
+        foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.file_download),
-            onPressed: _exportData,
-            tooltip: 'Xuất dữ liệu',
+          Container(
+            margin: const EdgeInsets.only(right: AppStyles.spacingS),
+            child: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(AppStyles.spacingS),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                ),
+                child: const Icon(Icons.file_download, size: 20),
+              ),
+              onPressed: _exportData,
+              tooltip: 'Xuất dữ liệu',
+            ),
           ),
           if (_messages.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.clear_all),
-              onPressed: _clearHistory,
-              tooltip: 'Xóa lịch sử',
+            Container(
+              margin: const EdgeInsets.only(right: AppStyles.spacingM),
+              child: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(AppStyles.spacingS),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                  ),
+                  child: const Icon(Icons.clear_all, size: 20),
+                ),
+                onPressed: _clearHistory,
+                tooltip: 'Xóa lịch sử',
+              ),
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
-              ),
-            )
-          : Column(
-              children: [
-                _buildStatisticsCard(),
-                _buildFilterChips(),
-                Expanded(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
+        child: _isLoading
+            ? Center(
+                child: Container(
+                  padding: const EdgeInsets.all(AppStyles.spacingXL),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadowMedium,
+                        blurRadius: 20,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
+                      ),
+                      SizedBox(height: AppStyles.spacingL),
+                      Text(
+                        'Đang tải lịch sử...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : SafeArea(
+                child: Column(
+                  children: [
+                    _buildStatisticsCard(),
+                    _buildFilterChips(),
+                    Expanded(
                   child: _filteredMessages.isEmpty
                       ? Center(
                           child: Column(
@@ -413,6 +676,8 @@ class _ChatHistoryScreenState extends State<ChatHistoryScreen> {
                 ),
               ],
             ),
+        ),
+      ),
     );
   }
 } 

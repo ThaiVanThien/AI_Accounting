@@ -356,14 +356,28 @@ mixin CommonScreenMixin<T extends StatefulWidget> on State<T> {
 
 // MainScreen class merged from main_screen.dart
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialTab;
+  
+  const MainScreen({super.key, this.initialTab = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
+// Wrapper class for navigation with specific tab
+class MainScreenWithTab extends StatelessWidget {
+  final int initialTab;
+  
+  const MainScreenWithTab({super.key, required this.initialTab});
+  
+  @override
+  Widget build(BuildContext context) {
+    return MainScreen(initialTab: initialTab);
+  }
+}
+
 class _MainScreenState extends State<MainScreen> with CommonScreenMixin {
-  int _currentIndex = 0;
+  late int _currentIndex;
   List<FinanceRecord> _records = [];
   int _nextId = 1;
   bool _isLoading = true;
@@ -374,10 +388,11 @@ class _MainScreenState extends State<MainScreen> with CommonScreenMixin {
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialTab;
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData() async { 
     try {
       // Load dữ liệu từ storage
       final records = await _storageManager.getFinanceRecords();
@@ -416,7 +431,7 @@ class _MainScreenState extends State<MainScreen> with CommonScreenMixin {
     _screens.clear();
     _screens.addAll([
       const HomeScreen(), // 0: Trang chủ
-      const OrderFormScreen(), // 1: Tạo hóa đơn
+      const OrderFormScreen(hideFloatingButton: true), // 1: Tạo hóa đơn
       AIInputScreen( // 2: AI Chat
         onAddRecord: _addRecord,
         records: _records,
