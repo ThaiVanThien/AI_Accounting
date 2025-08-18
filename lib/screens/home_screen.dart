@@ -871,7 +871,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        child: Icon(icon, color: Colors.white, size: 32),
+                        child: Icon(icon, color: Colors.white, size: MediaQuery.of(context).size.width * 0.062,),
                       ),
                       const SizedBox(height: AppStyles.spacingL),
                       Text(
