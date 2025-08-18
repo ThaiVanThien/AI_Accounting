@@ -924,24 +924,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
            color: AppColors.mainColor
           ),
         ),
-        actions: [
-          if (!_isEditMode)
-            Container(
-              margin: const EdgeInsets.only(right: AppStyles.spacingM),
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingS),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(AppStyles.radiusS),
-                  ),
-                  child: const Icon(Icons.refresh, size: 20),
-                ),
-                onPressed: _generateOrderNumber,
-                tooltip: 'Tạo số đơn mới',
-              ),
-            ),
-        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -1657,6 +1639,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Row(
               children: [
                 Expanded(
@@ -1668,128 +1651,203 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
+                  splashRadius: 20,
+                  tooltip: 'Đóng',
                 ),
               ],
             ),
-            const SizedBox(height: AppStyles.spacingM),
-            
+
+            SizedBox(height: AppStyles.spacingS),
+
             // Search
             TextField(
               controller: _searchController,
+              style: TextStyle(fontSize: (MediaQuery.of(context).size.width * 0.03),),
               onChanged: _filterProducts,
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm sản phẩm...',
                 prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                  borderSide: BorderSide(color: AppColors.borderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                  borderSide: BorderSide(color: AppColors.borderLight),
                 ),
               ),
             ),
-            const SizedBox(height: AppStyles.spacingM),
-            
+
+            SizedBox(height: AppStyles.spacingM),
+
+            Divider(height: 1, color: AppColors.borderLight),
+
+            SizedBox(height: AppStyles.spacingM),
+
             // Product list
+            // --- Product list (no avatar, clearer separation) ---
             Expanded(
-              child: ListView.builder(
+              child: _filteredProducts.isEmpty
+                  ? Center(child: Text('Không có sản phẩm', style: AppStyles.bodyMedium))
+                  : ListView.separated(
                 itemCount: _filteredProducts.length,
+                separatorBuilder: (_, __) => SizedBox(height: AppStyles.spacingS),
                 itemBuilder: (context, index) {
                   final product = _filteredProducts[index];
                   final isSelected = _selectedProduct?.id == product.id;
-                  
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: AppStyles.spacingS),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.mainColor.withOpacity(0.1) : null,
+
+                  return Card(
+                    elevation: 1,
+                    margin: EdgeInsets.zero, // spacing controlled by separator
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppStyles.radiusM),
-                      border: Border.all(
+                      side: BorderSide(
                         color: isSelected ? AppColors.mainColor : AppColors.borderLight,
+                        width: isSelected ? 1.2 : 1.0,
                       ),
                     ),
-                    child: ListTile(
-                      title: Text(
-                        product.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mã: ${product.code}',
-                            style: const TextStyle(fontSize: 12),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Giá: ${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.successColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Tồn kho: ${product.stockQuantity} ${product.unit}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: product.stockQuantity > 0 
-                                  ? AppColors.textSecondary 
-                                  : AppColors.errorColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                    child: InkWell(
                       onTap: () {
                         setState(() {
                           _selectedProduct = product;
                         });
                       },
-                      trailing: isSelected ? const Icon(Icons.check_circle, color: AppColors.mainColor) : null,
+                      borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: AppStyles.spacingS + 2,
+                          horizontal: AppStyles.spacingM,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title row: name + trailing check
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    product.name ?? '-',
+                                    style: AppStyles.bodyLarge.copyWith(fontWeight: FontWeight.w700),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Padding(
+                                    padding: EdgeInsets.only(left: AppStyles.spacingS),
+                                    child: Icon(Icons.check_circle, color: AppColors.mainColor, size: 20),
+                                  ),
+                              ],
+                            ),
+
+                            SizedBox(height: AppStyles.spacingS),
+
+                            // Info row: code + price chip
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Mã: ${product.code ?? "-"}',
+                                    style: AppStyles.bodySmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(width: AppStyles.spacingS),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.successColor.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${FormatUtils.formatCurrency(product.sellingPrice)} VNĐ',
+                                    style: AppStyles.bodySmall.copyWith(
+                                      color: AppColors.successColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: AppStyles.spacingS),
+
+                            // Stock line
+                            Text(
+                              'Tồn kho: ${product.stockQuantity ?? 0} ${product.unit ?? ""}',
+                              style: AppStyles.bodySmall.copyWith(
+                                color: (product.stockQuantity ?? 0) > 0 ? AppColors.textSecondary : AppColors.errorColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
               ),
             ),
-            
-            const SizedBox(height: AppStyles.spacingM),
-            
-            // Quantity input
+
+
+            SizedBox(height: AppStyles.spacingM),
+
+            // Quantity row
             Row(
               children: [
-                const Text('Số lượng:'),
-                const SizedBox(width: AppStyles.spacingM),
+                Text(
+                  'Số lượng:',
+                  style: AppStyles.bodyMedium.copyWith(
+                    fontSize: (MediaQuery.of(context).size.width * 0.03),
+                  ),
+                ),
+                SizedBox(width: AppStyles.spacingM),
                 Expanded(
                   child: TextFormField(
                     controller: _quantityController,
+                    style: TextStyle(fontSize: (MediaQuery.of(context).size.width * 0.03),),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
                     decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppStyles.radiusS)),
                       isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                       suffixText: _selectedProduct?.unit,
                     ),
+                    onChanged: (_) => setState(() {}), // cập nhật UI
                   ),
                 ),
+                SizedBox(width: AppStyles.spacingM),
+                if (_selectedProduct != null)
+                  Text(
+                    '→ ${FormatUtils.formatCurrency((_selectedProduct!.sellingPrice) * (double.tryParse(_quantityController.text.replaceAll(',', '.')) ?? 0))} VNĐ',
+                    style: AppStyles.bodySmall.copyWith(fontWeight: FontWeight.w600,fontSize: (MediaQuery.of(context).size.width * 0.03),),
+                  ),
               ],
             ),
-            
-            const SizedBox(height: AppStyles.spacingL), 
-            
-            // Actions 
+
+            SizedBox(height: AppStyles.spacingL),
+
+            // Actions
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Hủy'),
+                  child:  Text('Hủy',style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.035),),
                 ),
-                const SizedBox(width: AppStyles.spacingS),
+                SizedBox(width: AppStyles.spacingS),
                 ElevatedButton(
                   onPressed: _addProduct,
-                  child: const Text('Thêm'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppStyles.radiusM)),
+                    elevation: 2,
+                  ),
+                  child:  Text('Thêm',style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.035),),
                 ),
               ],
             ),
@@ -1797,6 +1855,8 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
         ),
       ),
     );
+
+
   }
 }
 
