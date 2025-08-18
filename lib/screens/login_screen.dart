@@ -347,7 +347,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            end: Alignment.bottomRight, 
             colors: [
               AppColors.backgroundPrimary,
               AppColors.mainColor,
@@ -356,14 +356,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             stops: [0.0, 0.5, 1.0],
           ),
         ),
-        child: SafeArea(
+        child: SafeArea(  
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppStyles.spacingL),
+            padding: EdgeInsets.all(
+              MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+            ),
             child: Column(
               children: [
-                const SizedBox(height: AppStyles.spacingXL),
-                
-                // Logo/Brand section
+                SizedBox(height: MediaQuery.of(context).size.height * 0.08), 
+                // Logo/Brand section  
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Column(

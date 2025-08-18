@@ -110,157 +110,376 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     }
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool isRequired = false,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    TextInputAction textInputAction = TextInputAction.next,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: AppColors.mainColor,
+            ),
+            const SizedBox(width: AppStyles.spacingS),
+            Text(
+              label,
+              style: AppStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (isRequired)
+              Text(
+                ' *',
+                style: TextStyle(
+                  color: AppColors.errorColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppStyles.spacingS),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.backgroundLight,
+            borderRadius: BorderRadius.circular(AppStyles.radiusM),
+            border: Border.all(
+              color: AppColors.borderLight,
+              width: 1,
+            ),
+          ),
+          child: TextFormField(
+            controller: controller,
+            validator: validator,
+            keyboardType: keyboardType,
+            maxLines: maxLines,
+            textInputAction: textInputAction,
+            style: AppStyles.bodyMedium,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: AppStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingM,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppStyles.spacingL),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Sửa khách hàng' : 'Thêm khách hàng'),
-        backgroundColor: AppColors.mainColor,
+        title: Text(
+          _isEditMode ? 'Sửa khách hàng' : 'Thêm khách hàng',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.mainGradient,
+          ),
+        ),
         foregroundColor: Colors.white,
         actions: [
           if (!_isLoading)
-            TextButton(
-              onPressed: _saveCustomer,
-              child: const Text(
-                'Lưu',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            Container(
+              margin: const EdgeInsets.only(right: AppStyles.spacingM),
+              child: TextButton.icon(
+                onPressed: _saveCustomer,
+                icon: const Icon(Icons.save, color: Colors.white, size: 20),
+                label: const Text(
+                  'Lưu',
+                  style: TextStyle(
+                    color: Colors.white, 
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppStyles.spacingM,
+                    vertical: AppStyles.spacingS,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                  ),
+                ),
               ),
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
+        child: _isLoading
+            ? Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Tên khách hàng
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tên khách hàng *',
-                        hintText: 'Nhập tên khách hàng',
-                        prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(),
+                    Container(
+                      padding: const EdgeInsets.all(AppStyles.spacingXL),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.shadowMedium,
+                            blurRadius: 20,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập tên khách hàng';
-                        }
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
+                      child: const Column(
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
+                          ),
+                          SizedBox(height: AppStyles.spacingL),
+                          Text(
+                            'Đang xử lý...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Số điện thoại
-                    TextFormField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Số điện thoại *',
-                        hintText: 'Nhập số điện thoại',
-                        prefixIcon: Icon(Icons.phone),
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Vui lòng nhập số điện thoại';
-                        }
-                        // Kiểm tra định dạng số điện thoại cơ bản
-                        final phoneRegex = RegExp(r'^[0-9+\-\s()]+$');
-                        if (!phoneRegex.hasMatch(value.trim())) {
-                          return 'Số điện thoại không hợp lệ';
-                        }
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
+                  ],
+                ),
+              )
+            : SafeArea(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(
+                    isSmallScreen ? AppStyles.spacingM : AppStyles.spacingL,
+                  ),
+              child: Container(
+                padding: EdgeInsets.all(
+                  isSmallScreen ? AppStyles.spacingL : AppStyles.spacingXL,
+                ),
+                margin: const EdgeInsets.only(top: AppStyles.spacingL),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadowMedium,
+                      blurRadius: 24,
+                      offset: Offset(0, 8),
+                      spreadRadius: 0,
                     ),
-                    const SizedBox(height: 16),
-
-                    // Email
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'Nhập email (không bắt buộc)',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppStyles.spacingM),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.mainGradient,
+                              borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            ),
+                            child: Icon(
+                              _isEditMode ? Icons.edit : Icons.person_add,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppStyles.spacingM),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Thông tin khách hàng',
+                                  style: AppStyles.headingMedium.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: AppStyles.spacingXS),
+                                Text(
+                                  _isEditMode 
+                                    ? 'Cập nhật thông tin khách hàng'
+                                    : 'Thêm khách hàng mới vào hệ thống',
+                                  style: AppStyles.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value != null && value.trim().isNotEmpty) {
-                          final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                          if (!emailRegex.hasMatch(value.trim())) {
-                            return 'Email không hợp lệ';
+                      
+                      const SizedBox(height: AppStyles.spacingXL),
+
+                      // Tên khách hàng
+                      _buildTextField(
+                        controller: _nameController,
+                        label: 'Tên khách hàng',
+                        hint: 'Nhập tên khách hàng',
+                        icon: Icons.person_outline,
+                        isRequired: true,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Vui lòng nhập tên khách hàng';
                           }
-                        }
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Địa chỉ
-                    TextFormField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Địa chỉ',
-                        hintText: 'Nhập địa chỉ (không bắt buộc)',
-                        prefixIcon: Icon(Icons.location_on),
-                        border: OutlineInputBorder(),
+                          return null;
+                        },
                       ),
-                      maxLines: 2,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
 
-                    // Ghi chú
-                    TextFormField(
-                      controller: _noteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ghi chú',
-                        hintText: 'Nhập ghi chú (không bắt buộc)',
-                        prefixIcon: Icon(Icons.note),
-                        border: OutlineInputBorder(),
+                      // Số điện thoại
+                      _buildTextField(
+                        controller: _phoneController,
+                        label: 'Số điện thoại',
+                        hint: 'Nhập số điện thoại',
+                        icon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                        isRequired: true,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Vui lòng nhập số điện thoại';
+                          }
+                          final phoneRegex = RegExp(r'^[0-9+\-\s()]+$');
+                          if (!phoneRegex.hasMatch(value.trim())) {
+                            return 'Số điện thoại không hợp lệ';
+                          }
+                          return null;
+                        },
                       ),
-                      maxLines: 3,
-                      textInputAction: TextInputAction.done,
-                    ),
-                    const SizedBox(height: 32),
 
-                    // Nút lưu
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _saveCustomer,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.mainColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      // Email
+                      _buildTextField(
+                        controller: _emailController,
+                        label: 'Email',
+                        hint: 'Nhập email (không bắt buộc)',
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value != null && value.trim().isNotEmpty) {
+                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            if (!emailRegex.hasMatch(value.trim())) {
+                              return 'Email không hợp lệ';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // Địa chỉ
+                      _buildTextField(
+                        controller: _addressController,
+                        label: 'Địa chỉ',
+                        hint: 'Nhập địa chỉ (không bắt buộc)',
+                        icon: Icons.location_on_outlined,
+                        maxLines: 2,
+                      ),
+
+                      // Ghi chú
+                      _buildTextField(
+                        controller: _noteController,
+                        label: 'Ghi chú',
+                        hint: 'Nhập ghi chú (không bắt buộc)',
+                        icon: Icons.note_outlined,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.done,
+                      ),
+
+                      const SizedBox(height: AppStyles.spacingXL),
+
+                      // Nút lưu
+                      Container(
+                        height: isSmallScreen ? 50 : 56,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.mainGradient,
+                          borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.mainColor.withOpacity(0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            onTap: _isLoading ? null : _saveCustomer,
+                            child: Center(
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          _isEditMode ? Icons.update : Icons.add,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: AppStyles.spacingS),
+                                        Text(
+                                          _isEditMode ? 'Cập nhật' : 'Thêm mới',
+                                          style: const TextStyle(
+                                            fontSize: 16, 
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ),
                         ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              _isEditMode ? 'Cập nhật' : 'Thêm mới',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                    ),
                   ],
                 ),
               ),
             ),
+                ),
+        ),
+      ),
     );
   }
 }

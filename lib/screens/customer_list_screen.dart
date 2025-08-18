@@ -354,8 +354,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           ),
                         ),
                         child: Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
+                          margin: EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width < 600 ? 8 : 12,
                             vertical: 6,
                           ),
                           elevation: 4,

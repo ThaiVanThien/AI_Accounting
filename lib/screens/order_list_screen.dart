@@ -98,19 +98,163 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa đơn hàng "${order.orderNumber}"?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingS),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+              ),
+              child: const Icon(
+                Icons.receipt_long_outlined,
+                color: AppColors.errorColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Expanded(
+              child: Text(
+                'Xác nhận xóa đơn hàng',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RichText(
+              text: TextSpan(
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+                children: [
+                  const TextSpan(text: 'Bạn có chắc muốn xóa đơn hàng '),
+                  TextSpan(
+                    text: '"${order.orderNumber}"',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.mainColor,
+                    ),
+                  ),
+                  const TextSpan(text: '?'),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                color: AppColors.infoColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                border: Border.all(color: AppColors.infoColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppColors.infoColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppStyles.spacingS),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Thông tin đơn hàng:',
+                          style: TextStyle(
+                            color: AppColors.infoColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: AppStyles.spacingXS),
+                        Text(
+                          '• ${order.items.length} sản phẩm\n• Tổng: ${FormatUtils.formatCurrency(order.total)} VNĐ',
+                          style: TextStyle(
+                            color: AppColors.infoColor,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingS),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                color: AppColors.warningColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                border: Border.all(color: AppColors.warningColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber,
+                    color: AppColors.warningColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppStyles.spacingS),
+                  const Expanded(
+                    child: Text(
+                      'Hành động này không thể hoàn tác!',
+                      style: TextStyle(
+                        color: AppColors.warningColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.delete, size: 18),
+            label: const Text('Xóa đơn hàng'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.errorColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
             ),
-            child: const Text('Xóa'),
           ),
         ],
       ),
@@ -553,8 +697,8 @@ class _OrderListScreenState extends State<OrderListScreen> with CommonScreenMixi
     final statusColor = _getStatusColor(order.status);
     
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppStyles.spacingM,
+      margin: EdgeInsets.symmetric(
+        horizontal: MediaQuery.of(context).size.width < 600 ? AppStyles.spacingS : AppStyles.spacingM,
         vertical: AppStyles.spacingS,
       ),
       decoration: BoxDecoration(

@@ -624,14 +624,14 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               children: [
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery
-                        .of(context)
-                        .size
-                        .width * 0.75,
+                    maxWidth: MediaQuery.of(context).size.width * 
+                        (MediaQuery.of(context).size.width < 600 ? 0.85 : 0.75),
                   ),
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: EdgeInsets.all(
+                    MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+                  ),
                   decoration: BoxDecoration(
-                    gradient: isUser
+                    gradient: isUser 
                         ? AppColors.mainGradient
                         : LinearGradient(
                       colors: [
@@ -817,12 +817,12 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           Flexible(
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery
-                    .of(context)
-                    .size
-                    .width * 0.75,
+                maxWidth: MediaQuery.of(context).size.width * 
+                    (MediaQuery.of(context).size.width < 600 ? 0.85 : 0.75),
               ),
-              padding: const EdgeInsets.all(AppStyles.spacingL),
+              padding: EdgeInsets.all(
+                MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [

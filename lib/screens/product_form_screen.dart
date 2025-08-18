@@ -365,7 +365,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               children: [
                 // Basic Information Card
                 Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+        ),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundCard,
                     borderRadius: BorderRadius.circular(AppStyles.radiusL),
@@ -471,7 +473,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
                 // Pricing Information Card
                 Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+        ),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundCard,
                     borderRadius: BorderRadius.circular(AppStyles.radiusL),
@@ -559,7 +563,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
                 // Stock Information Card
                 Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+        ),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundCard,
                     borderRadius: BorderRadius.circular(AppStyles.radiusL),
@@ -637,7 +643,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
                 // Status Card
                 Container(
-                  padding: const EdgeInsets.all(AppStyles.spacingL),
+                  padding: EdgeInsets.all(
+          MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+        ),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundCard,
                     borderRadius: BorderRadius.circular(AppStyles.radiusL),

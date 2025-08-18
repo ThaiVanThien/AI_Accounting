@@ -65,22 +65,48 @@ class _RecordListScreenState extends State<RecordListScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredRecords = _filteredAndSortedRecords;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.list_alt, size: 24),
-            SizedBox(width: AppStyles.spacingS),
-            Text('Danh Sách Giao Dịch'),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingS),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+              ),
+              child: const Icon(Icons.receipt_long, size: 20),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Flexible(
+              child: Text(
+                'Giao Dịch Tài Chính',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
-        backgroundColor: AppColors.mainColor,
-        foregroundColor: AppColors.textOnPrimary,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF667EEA),
+                Color(0xFF764BA2),
+                Color(0xFF9A4993),
+              ],
+            ),
           ),
         ),
         actions: [

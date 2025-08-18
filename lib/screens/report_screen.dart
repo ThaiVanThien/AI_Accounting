@@ -325,7 +325,9 @@ class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
 
   Widget _buildReportContent(Report report) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppStyles.spacingM),
+      padding: EdgeInsets.all(
+        MediaQuery.of(context).size.width < 600 ? AppStyles.spacingS : AppStyles.spacingM,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
