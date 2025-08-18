@@ -240,7 +240,7 @@ class _ProductListScreenState extends State<ProductListScreen> with CommonScreen
             children: [
               Expanded(
                 child: CheckboxListTile(
-                  title: const Text('Chỉ sản phẩm đang bán'),
+                  title: const Text('Đang bán'),
                   value: _showActiveOnly,
                   onChanged: (value) {
                     setState(() {

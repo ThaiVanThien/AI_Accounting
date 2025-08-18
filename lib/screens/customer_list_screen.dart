@@ -476,49 +476,75 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                       break;
                                   }
                                 },
+                                // Giao diện menu
+                                color: Colors.grey[50], // nền menu (nhạt)
+                                elevation: 6,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                itemBuilder: (context) => [
+                                itemBuilder: (context) => <PopupMenuEntry<String>>[
                                   if (customer.isActive)
-                                    PopupMenuItem(
+                                    PopupMenuItem<String>(
                                       value: 'edit',
+                                      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 15),
                                       child: Row(
-                                        children: const [
-                                          Icon(Icons.edit, color: Colors.blue),
-                                          SizedBox(width: 8),
-                                          Text('Sửa'),
+                                        children: [
+                                          // icon trong ô nhỏ màu xanh
+                                          const Center(child: Icon(Icons.edit, color: Colors.blue)),
+                                          const SizedBox(width: 12),
+                                          Text('Sửa', style: TextStyle(fontSize: 15,fontWeight: FontWeight.w600,)),
                                         ],
                                       ),
                                     ),
                                   if (customer.isActive)
-                                    PopupMenuItem(
+                                    PopupMenuItem<String>(
                                       value: 'delete',
+                                      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 15),
                                       child: Row(
-                                        children: const [
-                                          Icon(Icons.delete, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Xóa'),
+                                        children: [
+                                          const Center(child: Icon(Icons.delete, color: Colors.red)),
+                                          const SizedBox(width: 12),
+                                          const Text('Xóa', style: TextStyle(fontSize: 15,fontWeight: FontWeight.w600,)),
                                         ],
                                       ),
                                     ),
                                   if (!customer.isActive)
-                                    PopupMenuItem(
+                                    PopupMenuItem<String>(
                                       value: 'restore',
+                                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                       child: Row(
-                                        children: const [
-                                          Icon(Icons.restore, color: Colors.green),
-                                          SizedBox(width: 8),
-                                          Text('Khôi phục'),
+                                        children: [
+                                          Container(
+                                            width: 36,
+                                            height: 36,
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.withOpacity(0.12),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: const Center(child: Icon(Icons.restore, color: Colors.green)),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text('Khôi phục', style: TextStyle(fontSize: 15)),
                                         ],
                                       ),
                                     ),
                                 ],
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  child: const Icon(Icons.more_vert, color: Colors.black87, size: 20),
+                                // Nút gọi menu (nền trắng, ripple)
+                                child: Material(
+                                  elevation: 0,
+                                  color: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      child: const Icon(Icons.more_vert, color: Colors.black87, size: 20),
+                                    ),
+                                  ),
                                 ),
                               ),
+
+
 
                             ),
                           ),

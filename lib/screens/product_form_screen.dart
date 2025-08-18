@@ -585,52 +585,50 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         ],
                       ),
                       const SizedBox(height: AppStyles.spacingL),
-                      
-                      Row(
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _stockQuantityController,
-                              label: 'Số lượng tồn kho',
-                              icon: Icons.inventory,
-                              hint: '0',
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Vui lòng nhập số lượng';
-                                }
-                                final quantity = int.tryParse(value);
-                                if (quantity == null || quantity < 0) {
-                                  return 'Số lượng không hợp lệ';
-                                }
-                                return null;
-                              },
-                            ),
+                          _buildTextField(
+                            controller: _stockQuantityController,
+                            label: 'Số lượng tồn kho',
+                            icon: Icons.inventory,
+                            hint: '0',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Vui lòng nhập số lượng';
+                              }
+                              final quantity = int.tryParse(value);
+                              if (quantity == null || quantity < 0) {
+                                return 'Số lượng không hợp lệ';
+                              }
+                              return null;
+                            },
                           ),
-                          const SizedBox(width: AppStyles.spacingM),
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _minStockLevelController,
-                              label: 'Tồn kho tối thiểu',
-                              icon: Icons.warning,
-                              hint: '0',
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Vui lòng nhập số lượng tối thiểu';
-                                }
-                                final quantity = int.tryParse(value);
-                                if (quantity == null || quantity < 0) {
-                                  return 'Số lượng không hợp lệ';
-                                }
-                                return null;
-                              },
-                            ),
+                          const SizedBox(height: AppStyles.spacingM),
+                          _buildTextField(
+                            controller: _minStockLevelController,
+                            label: 'Tồn kho tối thiểu',
+                            icon: Icons.warning,
+                            hint: '0',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Vui lòng nhập số lượng tối thiểu';
+                              }
+                              final quantity = int.tryParse(value);
+                              if (quantity == null || quantity < 0) {
+                                return 'Số lượng không hợp lệ';
+                              }
+                              return null;
+                            },
                           ),
                         ],
-                      ),
+                      )
+
                     ],
                   ),
                 ),
