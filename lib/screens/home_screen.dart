@@ -328,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
             
             // Main content
             Padding(
-              padding: EdgeInsets.all(isSmallScreen ? AppStyles.spacingL : AppStyles.spacingXL),
+              padding: EdgeInsets.all(isSmallScreen ? AppStyles.spacingS : AppStyles.spacingXS),
               child: Row(
                 children: [
                   // Icon container with improved design
@@ -358,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Icon(
                       greetingIcon,
-                      size: isSmallScreen ? 32 : 36,
+                      size: isSmallScreen ? 16 : 18,
                       color: Colors.white,
                     ),
                   ),
@@ -434,27 +434,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _showQuickRevenueDialog,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppStyles.spacingM),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        child: const Icon(
-                          Icons.monetization_on_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-
-                  ],
-                ),
+                // Row(
+                //   children: [
+                //     GestureDetector(
+                //       onTap: _showQuickRevenueDialog,
+                //       child: Container(
+                //         padding: const EdgeInsets.all(AppStyles.spacingM),
+                //         decoration: BoxDecoration(
+                //           color: Colors.white.withOpacity(0.2),
+                //           borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                //           border: Border.all(color: Colors.white.withOpacity(0.3)),
+                //         ),
+                //         child: const Icon(
+                //           Icons.monetization_on_rounded,
+                //           color: Colors.white,
+                //           size: 24,
+                //         ),
+                //       ),
+                //     ),
+                //
+                //   ],
+                // ),
               ],
             ),
           ),

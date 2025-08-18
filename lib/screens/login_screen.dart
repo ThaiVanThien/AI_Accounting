@@ -353,7 +353,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               AppColors.mainColor,
               AppColors.mainColorDark,
             ],
-            stops: [0.0, 0.5, 1.0],
+            stops: [0.0, 0.5, 1.0], 
           ),
         ),
         child: SafeArea(  
