@@ -13,7 +13,6 @@ import '../utils/format_utils.dart';
 import 'chat_history_screen.dart';
 import '../main.dart'; // Import để sử dụng CommonScreenMixin
 
-
 class AIInputScreen extends StatefulWidget {
   final Function(FinanceRecord) onAddRecord;
   final List<FinanceRecord> records;
@@ -28,7 +27,8 @@ class AIInputScreen extends StatefulWidget {
   State<AIInputScreen> createState() => _AIInputScreenState();
 }
 
-class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateMixin, CommonScreenMixin {
+class _AIInputScreenState extends State<AIInputScreen>
+    with TickerProviderStateMixin, CommonScreenMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final AIService _aiService = AIService();
@@ -53,8 +53,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     _typingAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
-    )
-      ..repeat();
+    )..repeat();
     _voiceAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -88,7 +87,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     }
   }
 
-    // Handle speech status changes
+  // Handle speech status changes
   void _onSpeechStatus(String status) {
     print('Speech status: $status');
     if (mounted) {
@@ -105,16 +104,18 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       setState(() {
         _speechListening = false;
       });
-      
+
       String errorMessage = 'Lỗi không xác định';
       if (error.toString().contains('network')) {
         errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet.';
       } else if (error.toString().contains('permission')) {
-        errorMessage = 'Vui lòng cấp quyền microphone để sử dụng tính năng này.';
+        errorMessage =
+            'Vui lòng cấp quyền microphone để sử dụng tính năng này.';
       } else if (error.toString().contains('not_available')) {
-        errorMessage = 'Tính năng nhận diện giọng nói không khả dụng trên thiết bị này.';
+        errorMessage =
+            'Tính năng nhận diện giọng nói không khả dụng trên thiết bị này.';
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMessage),
@@ -140,7 +141,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         partialResults: true,
         onSoundLevelChange: _onSoundLevelChange,
       );
-      
+
       if (mounted) {
         setState(() {
           _speechListening = true;
@@ -177,7 +178,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         _speechText = result.recognizedWords;
         _confidenceLevel = result.confidence;
       });
-      
+
       // Update text field with recognized speech
       _messageController.text = _speechText;
     }
@@ -221,10 +222,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           children: [
             Text(
               'Để sử dụng tính năng nhập liệu bằng giọng nói, ứng dụng cần quyền truy cập microphone.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             SizedBox(height: AppStyles.spacingM),
             Text(
@@ -239,10 +237,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               '• Nói thay vì gõ tin nhắn\n'
               '• Nhận diện giọng nói tiếng Việt\n'
               '• Tương tác nhanh hơn với AI',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, height: 1.5),
             ),
           ],
         ),
@@ -270,8 +265,6 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       ),
     );
   }
-
-
 
   Future<void> _loadChatHistory() async {
     try {
@@ -302,9 +295,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text
-        .trim()
-        .isEmpty) return;
+    if (_messageController.text.trim().isEmpty) return;
 
     final userMessage = _messageController.text.trim();
     _messageController.clear();
@@ -320,7 +311,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     try {
       // Sử dụng processMessage từ AI service
       final aiResponse = await _aiService.processMessage(
-          userMessage, widget.records);
+        userMessage,
+        widget.records,
+      );
 
       // Reload lại lịch sử chat để có messages mới
       await _loadChatHistory();
@@ -339,8 +332,10 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           aiResponse.metadata != null &&
           aiResponse.metadata!['order_preview'] == true &&
           aiResponse.metadata!['dialog_data'] != null) {
-        final dialogData = aiResponse.metadata!['dialog_data'] as Map<String, dynamic>?;
-        final previewData = aiResponse.metadata!['preview_data'] as Map<String, dynamic>?;
+        final dialogData =
+            aiResponse.metadata!['dialog_data'] as Map<String, dynamic>?;
+        final previewData =
+            aiResponse.metadata!['preview_data'] as Map<String, dynamic>?;
         if (dialogData != null && previewData != null) {
           await _showOrderConfirmationDialog(dialogData, previewData);
         }
@@ -395,10 +390,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             children: [
               const Text(
                 'AI đã phân tích và tạo giao dịch sau:',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               const SizedBox(height: AppStyles.spacingM),
               Container(
@@ -426,7 +418,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                     _buildRecordDetailRow(
                       '📊 Lợi nhuận:',
                       FormatUtils.formatCurrencyVND(record.loiNhuan),
-                      record.loiNhuan >= 0 ? AppColors.successColor : AppColors.errorColor,
+                      record.loiNhuan >= 0
+                          ? AppColors.successColor
+                          : AppColors.errorColor,
                     ),
                     if (record.ghiChu.isNotEmpty) ...[
                       const SizedBox(height: AppStyles.spacingS),
@@ -557,21 +551,20 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   Future<void> _clearHistory() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) =>
-          AlertDialog(
-            title: const Text('Xác nhận'),
-            content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử chat?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Hủy'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Xóa'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận'),
+        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử chat?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
     );
 
     if (confirm == true) {
@@ -589,8 +582,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     return Container(
       margin: const EdgeInsets.only(bottom: AppStyles.spacingL),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment
-            .start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
@@ -624,30 +618,35 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               children: [
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 
+                    maxWidth:
+                        MediaQuery.of(context).size.width *
                         (MediaQuery.of(context).size.width < 600 ? 0.85 : 0.75),
                   ),
                   padding: EdgeInsets.all(
-                    MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+                    MediaQuery.of(context).size.width < 600
+                        ? AppStyles.spacingM
+                        : AppStyles.spacingL,
                   ),
                   decoration: BoxDecoration(
-                    gradient: isUser 
+                    gradient: isUser
                         ? AppColors.mainGradient
                         : LinearGradient(
-                      colors: [
-                        AppColors.backgroundCard,
-                        AppColors.backgroundCard.withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                            colors: [
+                              AppColors.backgroundCard,
+                              AppColors.backgroundCard.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(AppStyles.radiusL),
                       topRight: const Radius.circular(AppStyles.radiusL),
                       bottomLeft: Radius.circular(
-                          isUser ? AppStyles.radiusL : AppStyles.radiusS),
+                        isUser ? AppStyles.radiusL : AppStyles.radiusS,
+                      ),
                       bottomRight: Radius.circular(
-                          isUser ? AppStyles.radiusS : AppStyles.radiusL),
+                        isUser ? AppStyles.radiusS : AppStyles.radiusL,
+                      ),
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -661,9 +660,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                     border: isUser
                         ? null
                         : Border.all(
-                      color: AppColors.mainColor.withOpacity(0.1),
-                      width: 1,
-                    ),
+                            color: AppColors.mainColor.withOpacity(0.1),
+                            width: 1,
+                          ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,8 +670,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                       Text(
                         message.text,
                         style: TextStyle(
-                          color: isUser ? AppColors.textOnMain : AppColors
-                              .textPrimary,
+                          color: isUser
+                              ? AppColors.textOnMain
+                              : AppColors.textPrimary,
                           fontSize: 15,
                           height: 1.5,
                           fontWeight: FontWeight.w400,
@@ -688,7 +688,8 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                           decoration: BoxDecoration(
                             color: _getTypeColor(message.type!),
                             borderRadius: BorderRadius.circular(
-                                AppStyles.radiusS),
+                              AppStyles.radiusS,
+                            ),
                           ),
                           child: Text(
                             _getTypeLabel(message.type!),
@@ -817,11 +818,14 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           Flexible(
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 
+                maxWidth:
+                    MediaQuery.of(context).size.width *
                     (MediaQuery.of(context).size.width < 600 ? 0.85 : 0.75),
               ),
               padding: EdgeInsets.all(
-                MediaQuery.of(context).size.width < 600 ? AppStyles.spacingM : AppStyles.spacingL,
+                MediaQuery.of(context).size.width < 600
+                    ? AppStyles.spacingM
+                    : AppStyles.spacingL,
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -880,10 +884,11 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     return AnimatedBuilder(
       animation: _typingAnimationController,
       builder: (context, child) {
-        final animationValue = (_typingAnimationController.value -
-            (index * 0.2)) % 1.0;
-        final opacity = (animationValue < 0.5) ? animationValue * 2 : (1 -
-            animationValue) * 2;
+        final animationValue =
+            (_typingAnimationController.value - (index * 0.2)) % 1.0;
+        final opacity = (animationValue < 0.5)
+            ? animationValue * 2
+            : (1 - animationValue) * 2;
         final scale = 0.8 + (opacity * 0.4);
 
         return Transform.scale(
@@ -901,7 +906,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
   }
 
-    Widget _buildVoiceButton() {
+  Widget _buildVoiceButton() {
     return Container(
       margin: const EdgeInsets.only(right: AppStyles.spacingS),
       child: GestureDetector(
@@ -920,24 +925,25 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                           AppColors.errorColor.withOpacity(0.8),
                         ]
                       : _speechEnabled
-                          ? [
-                              AppColors.successColor,
-                              AppColors.successColor.withOpacity(0.8),
-                            ]
-                          : [
-                              AppColors.textSecondary,
-                              AppColors.textSecondary.withOpacity(0.8),
-                            ],
+                      ? [
+                          AppColors.successColor,
+                          AppColors.successColor.withOpacity(0.8),
+                        ]
+                      : [
+                          AppColors.textSecondary,
+                          AppColors.textSecondary.withOpacity(0.8),
+                        ],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: (_speechListening
-                            ? AppColors.errorColor
-                            : _speechEnabled
+                    color:
+                        (_speechListening
+                                ? AppColors.errorColor
+                                : _speechEnabled
                                 ? AppColors.successColor
                                 : AppColors.textSecondary)
-                        .withOpacity(0.3),
+                            .withOpacity(0.3),
                     blurRadius: _speechListening ? 12 : 8,
                     offset: const Offset(0, 2),
                   ),
@@ -947,7 +953,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                 alignment: Alignment.center,
                 children: [
                   AnimatedScale(
-                    scale: _speechListening ? 1.0 + (_voiceAnimationController.value * 0.2) : 1.0,
+                    scale: _speechListening
+                        ? 1.0 + (_voiceAnimationController.value * 0.2)
+                        : 1.0,
                     duration: const Duration(milliseconds: 100),
                     child: Icon(
                       _speechListening ? Icons.mic : Icons.mic_none,
@@ -1045,14 +1053,15 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           const SizedBox(height: AppStyles.spacingM),
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppStyles.spacingXL),
+              horizontal: AppStyles.spacingXL,
+            ),
             child: Text(
               'Tôi có thể giúp bạn:\n'
-                  '• Nhập dữ liệu tài chính\n'
-                  '• Tạo báo cáo doanh thu\n'
-                  '• Trả lời câu hỏi về kế toán\n'
-                  '• Phân tích dữ liệu\n'
-                  '🎤 Sử dụng giọng nói để tương tác',
+              '• Nhập dữ liệu tài chính\n'
+              '• Tạo báo cáo doanh thu\n'
+              '• Trả lời câu hỏi về kế toán\n'
+              '• Phân tích dữ liệu\n'
+              '🎤 Sử dụng giọng nói để tương tác',
               style: AppStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
                 height: 1.5,
@@ -1102,7 +1111,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             tooltip: 'Lịch sử chat',
           ),
           if (_messages.isNotEmpty)
-          IconButton(
+            IconButton(
               icon: const Icon(Icons.clear_all),
               onPressed: _clearHistory,
               tooltip: 'Xóa lịch sử',
@@ -1122,7 +1131,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               ),
             ),
             child: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert,color: Colors.white,),
+              icon: const Icon(Icons.more_vert, color: Colors.white),
               onSelected: (value) {
                 switch (value) {
                   case 'shop_info':
@@ -1186,7 +1195,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
       body: Column(
@@ -1194,23 +1203,25 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
           Expanded(
             child: _isLoadingHistory
                 ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.mainColor),
-              ),
-            )
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.mainColor,
+                      ),
+                    ),
+                  )
                 : _messages.isEmpty
                 ? _buildEmptyState()
                 : ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(AppStyles.spacingM),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length && _isTyping) {
-                  return _buildTypingIndicator();
-                }
-                return _buildMessageBubble(_messages[index]);
-              },
-            ),
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(AppStyles.spacingM),
+                    itemCount: _messages.length + (_isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _messages.length && _isTyping) {
+                        return _buildTypingIndicator();
+                      }
+                      return _buildMessageBubble(_messages[index]);
+                    },
+                  ),
           ),
           if (_isLoading && !_isTyping)
             Container(
@@ -1224,7 +1235,8 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.mainColor),
+                        AppColors.mainColor,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppStyles.spacingS),
@@ -1242,9 +1254,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
             padding: const EdgeInsets.all(AppStyles.spacingM),
             decoration: const BoxDecoration(
               color: AppColors.backgroundCard,
-              border: Border(
-                top: BorderSide(color: AppColors.borderLight),
-              ),
+              border: Border(top: BorderSide(color: AppColors.borderLight)),
             ),
             child: Column(
               children: [
@@ -1275,8 +1285,8 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                         const SizedBox(width: AppStyles.spacingS),
                         Expanded(
                           child: Text(
-                            _speechText.isEmpty 
-                                ? 'Đang nghe... Hãy nói điều gì đó' 
+                            _speechText.isEmpty
+                                ? 'Đang nghe... Hãy nói điều gì đó'
                                 : 'Đã nhận diện: "$_speechText"',
                             style: TextStyle(
                               color: AppColors.successColor,
@@ -1308,29 +1318,35 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _sendMessage(),
                         decoration: InputDecoration(
-                          hintText: _speechListening 
-                              ? 'Đang nghe giọng nói...' 
+                          hintText: _speechListening
+                              ? 'Đang nghe giọng nói...'
                               : 'Nhập tin nhắn hoặc nhấn mic để nói...',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            borderRadius: BorderRadius.circular(
+                              AppStyles.radiusL,
+                            ),
                             borderSide: BorderSide(
-                              color: _speechListening 
-                                  ? AppColors.successColor 
+                              color: _speechListening
+                                  ? AppColors.successColor
                                   : AppColors.borderLight,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            borderRadius: BorderRadius.circular(
+                              AppStyles.radiusL,
+                            ),
                             borderSide: const BorderSide(
                               color: AppColors.mainColor,
                               width: 2,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(AppStyles.radiusL),
+                            borderRadius: BorderRadius.circular(
+                              AppStyles.radiusL,
+                            ),
                             borderSide: BorderSide(
-                              color: _speechListening 
-                                  ? AppColors.successColor 
+                              color: _speechListening
+                                  ? AppColors.successColor
                                   : AppColors.borderLight,
                               width: _speechListening ? 2 : 1,
                             ),
@@ -1351,7 +1367,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                       child: IconButton(
                         icon: const Icon(Icons.send),
                         color: AppColors.textOnMain,
-                                                  onPressed: _isLoading ? null : _sendMessage,
+                        onPressed: _isLoading ? null : _sendMessage,
                       ),
                     ),
                   ],
@@ -1364,7 +1380,10 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
     );
   }
 
-  Future<void> _showOrderConfirmationDialog(Map<String, dynamic> dialogData, Map<String, dynamic> previewData) async {
+  Future<void> _showOrderConfirmationDialog(
+    Map<String, dynamic> dialogData,
+    Map<String, dynamic> previewData,
+  ) async {
     final title = dialogData["title"] as String? ?? "Xác nhận";
     final content = dialogData["content"] as String? ?? "";
     final positiveButton = dialogData["positive_button"] as String? ?? "Đồng ý";
@@ -1389,7 +1408,13 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               ),
             ),
             const SizedBox(width: AppStyles.spacingM),
-            Text(title),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width * 0.044,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -1410,14 +1435,13 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
                 decoration: BoxDecoration(
                   color: AppColors.warningColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppStyles.radiusS),
-                  border: Border.all(color: AppColors.warningColor.withOpacity(0.3)),
-                ),
-                child: const Text(
-                  '⚠️ Vui lòng kiểm tra kỹ thông tin trước khi xác nhận tạo đơn hàng.',
-                  style: TextStyle(
-                    color: AppColors.warningColor,
-                    fontSize: 14,
+                  border: Border.all(
+                    color: AppColors.warningColor.withOpacity(0.3),
                   ),
+                ),
+                child:  Text(
+                  '⚠️ Vui lòng kiểm tra kỹ thông tin trước khi xác nhận tạo đơn hàng.',
+                  style: TextStyle(color: AppColors.warningColor, fontSize: MediaQuery.of(context).size.width * 0.03),
                 ),
               ),
             ],
@@ -1426,7 +1450,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(negativeButton),
+            child: Text(negativeButton,style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.03)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1434,7 +1458,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
               backgroundColor: AppColors.successColor,
               foregroundColor: Colors.white,
             ),
-            child: Text(positiveButton),
+            child: Text(positiveButton,style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.03)),
           ),
         ],
       ),
@@ -1446,9 +1470,15 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
   }
 
   // Xử lý xác nhận đơn hàng qua AI Service
-  Future<void> _handleOrderConfirmation(bool confirmed, Map<String, dynamic> previewData) async {
+  Future<void> _handleOrderConfirmation(
+    bool confirmed,
+    Map<String, dynamic> previewData,
+  ) async {
     try {
-      final aiResponse = await _aiService.handleOrderConfirmation(confirmed, previewData);
+      final aiResponse = await _aiService.handleOrderConfirmation(
+        confirmed,
+        previewData,
+      );
 
       setState(() {
         _messages.add(aiResponse);
@@ -1533,7 +1563,9 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã tạo đơn hàng thành công với ${orderItems.length} sản phẩm'),
+            content: Text(
+              'Đã tạo đơn hàng thành công với ${orderItems.length} sản phẩm',
+            ),
             backgroundColor: AppColors.successColor,
           ),
         );
@@ -1546,7 +1578,7 @@ class _AIInputScreenState extends State<AIInputScreen> with TickerProviderStateM
         );
       }
     } catch (e) {
-      print('Error creating order: $e'); 
+      print('Error creating order: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

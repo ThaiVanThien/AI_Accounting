@@ -1719,12 +1719,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   size: 24,
                 ),
               ),
-              const SizedBox(width: AppStyles.spacingM),
+              const SizedBox(width: AppStyles.spacingS),
               Expanded(
                 child: Text(
-                  'Nhập tổng doanh thu ngày',
+                  'Tổng doanh thu ngày',
                   style: AppStyles.headingSmall.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontSize: MediaQuery.of(context).size.width * 0.04
                   ),
                 ),
               ),
@@ -1738,11 +1739,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Nhập tổng số tiền doanh thu của ngày hôm nay',
                 style: AppStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
+                    fontSize: MediaQuery.of(context).size.width * 0.035
                 ),
               ),
               const SizedBox(height: AppStyles.spacingL),
               TextField(
                 controller: revenueController,
+                style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.03),
                 keyboardType: TextInputType.number,
                 inputFormatters: [CurrencyInputFormatter()],
                 decoration: AppStyles.inputDecoration.copyWith(
@@ -1752,22 +1755,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.successColor,
                   ),
                   hintText: 'Ví dụ: 500,000',
+                  labelStyle: AppStyles.bodySmall.copyWith(
+                    fontSize: (MediaQuery.of(context).size.width * 0.03), color: Colors.black87
+                  ),
+                  hintStyle: AppStyles.bodySmall.copyWith(
+                    fontSize: (MediaQuery.of(context).size.width * 0.03),
+                  ),
                 ),
                 autofocus: true,
               ),
               const SizedBox(height: AppStyles.spacingM),
               TextField(
                 controller: noteController,
+                maxLines: 2,
+                style: AppStyles.bodyMedium.copyWith(fontSize: (MediaQuery.of(context).size.width * 0.03)), // chữ nhập
                 decoration: AppStyles.inputDecoration.copyWith(
                   labelText: 'Ghi chú (tùy chọn)',
+                  labelStyle: AppStyles.bodySmall.copyWith(fontSize: (MediaQuery.of(context).size.width * 0.03),color: Colors.black87), // labelText
+                  hintText: 'Ví dụ: Doanh thu bán hàng tại quầy',
+                  hintStyle: AppStyles.bodySmall.copyWith(fontSize: (MediaQuery.of(context).size.width * 0.03), color: AppColors.textHint), // hintText
                   prefixIcon: Icon(
                     Icons.note_outlined,
                     color: AppColors.infoColor,
                   ),
-                  hintText: 'Ví dụ: Doanh thu bán hàng tại quầy',
                 ),
-                maxLines: 2,
-              ),
+              )
+
             ],
           ),
           actions: [
@@ -1776,7 +1789,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 'Hủy',
                 style: AppStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondary, fontSize: (MediaQuery.of(context).size.width * 0.03)
                 ),
               ),
             ),
@@ -1786,7 +1799,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.of(context).pop();
               },
               style: AppStyles.primaryButtonStyle,
-              child: Text('Lưu'),
+              child: Text('Lưu',style: TextStyle(fontSize: (MediaQuery.of(context).size.width * 0.03)),),
             ),
           ],
         );
