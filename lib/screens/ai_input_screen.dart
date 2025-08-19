@@ -198,13 +198,16 @@ class _AIInputScreenState extends State<AIInputScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppStyles.spacingS),
               decoration: BoxDecoration(
                 color: AppColors.warningColor.withOpacity(0.1),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
               ),
               child: const Icon(
                 Icons.mic_off,
@@ -213,40 +216,91 @@ class _AIInputScreenState extends State<AIInputScreen>
               ),
             ),
             const SizedBox(width: AppStyles.spacingM),
-            const Text('Cần quyền microphone'),
+            const Expanded(
+              child: Text(
+                'Cần quyền microphone',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Để sử dụng tính năng nhập liệu bằng giọng nói, ứng dụng cần quyền truy cập microphone.',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-            SizedBox(height: AppStyles.spacingM),
-            Text(
-              'Tính năng này sẽ giúp bạn:',
               style: TextStyle(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                color: AppColors.textPrimary,
               ),
             ),
-            SizedBox(height: AppStyles.spacingS),
-            Text(
-              '• Nói thay vì gõ tin nhắn\n'
-              '• Nhận diện giọng nói tiếng Việt\n'
-              '• Tương tác nhanh hơn với AI',
-              style: TextStyle(color: AppColors.textSecondary, height: 1.5),
+            const SizedBox(height: AppStyles.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                color: AppColors.infoColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                border: Border.all(color: AppColors.infoColor.withOpacity(0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        color: AppColors.infoColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppStyles.spacingS),
+                      const Text(
+                        'Tính năng này sẽ giúp bạn:',
+                        style: TextStyle(
+                          color: AppColors.infoColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppStyles.spacingS),
+                  const Text(
+                    '🎤 Nói thay vì gõ tin nhắn\n'
+                    '🇻🇳 Nhận diện giọng nói tiếng Việt\n'
+                    '⚡ Tương tác nhanh hơn với AI',
+                    style: TextStyle(
+                      color: AppColors.infoColor,
+                      height: 1.5,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Để sau'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+            child: const Text(
+              'Để sau',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () async {
               Navigator.pop(context);
               final status = await Permission.microphone.request();
@@ -255,11 +309,19 @@ class _AIInputScreenState extends State<AIInputScreen>
                 await _startListening();
               }
             },
+            icon: const Icon(Icons.mic, size: 18),
+            label: const Text('Cấp quyền'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.successColor,
-              foregroundColor: AppColors.textOnMain,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
             ),
-            child: const Text('Cấp quyền'),
           ),
         ],
       ),
@@ -364,22 +426,45 @@ class _AIInputScreenState extends State<AIInputScreen>
       context: context,
       barrierDismissible: false, // Không cho phép đóng bằng cách tap ngoài
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppStyles.spacingS),
               decoration: BoxDecoration(
-                color: AppColors.successColor.withOpacity(0.1),
-                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.successColor,
+                    AppColors.successColor.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.successColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: const Icon(
                 Icons.save_outlined,
-                color: AppColors.successColor,
+                color: Colors.white,
                 size: 24,
               ),
             ),
             const SizedBox(width: AppStyles.spacingM),
-            const Text('Lưu giao dịch?'),
+            const Expanded(
+              child: Text(
+                'Lưu giao dịch?',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
           ],
         ),
         content: Container(
@@ -455,17 +540,34 @@ class _AIInputScreenState extends State<AIInputScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
             ),
-            child: const Text('Không lưu'),
+            child: const Text(
+              'Không lưu',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.save, size: 18),
+            label: const Text('Lưu giao dịch'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.successColor,
-              foregroundColor: AppColors.textOnMain,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
             ),
-            child: const Text('Lưu'),
           ),
         ],
       ),
@@ -552,16 +654,109 @@ class _AIInputScreenState extends State<AIInputScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận'),
-        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử chat?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingS),
+              decoration: BoxDecoration(
+                color: AppColors.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+              ),
+              child: const Icon(
+                Icons.clear_all,
+                color: AppColors.errorColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: AppStyles.spacingM),
+            const Expanded(
+              child: Text(
+                'Xóa lịch sử chat',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Bạn có chắc muốn xóa toàn bộ lịch sử chat?',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppStyles.spacingM),
+            Container(
+              padding: const EdgeInsets.all(AppStyles.spacingM),
+              decoration: BoxDecoration(
+                color: AppColors.warningColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+                border: Border.all(color: AppColors.warningColor.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber,
+                    color: AppColors.warningColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppStyles.spacingS),
+                  const Expanded(
+                    child: Text(
+                      'Hành động này không thể hoàn tác!',
+                      style: TextStyle(
+                        color: AppColors.warningColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+            child: const Text(
+              'Hủy',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa'),
+            icon: const Icon(Icons.delete_forever, size: 18),
+            label: const Text('Xóa lịch sử'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.errorColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
+            ),
           ),
         ],
       ),
@@ -1393,26 +1588,45 @@ class _AIInputScreenState extends State<AIInputScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
+        ),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppStyles.spacingS),
               decoration: BoxDecoration(
-                color: AppColors.infoColor.withOpacity(0.1),
-                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.infoColor,
+                    AppColors.infoColor.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppStyles.radiusS),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.infoColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: const Icon(
                 Icons.shopping_cart,
-                color: AppColors.infoColor,
+                color: Colors.white,
                 size: 24,
               ),
             ),
             const SizedBox(width: AppStyles.spacingM),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: MediaQuery.of(context).size.width * 0.044,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.044,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.infoColor,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -1450,15 +1664,42 @@ class _AIInputScreenState extends State<AIInputScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(negativeButton,style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.03)),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+            ),
+            child: Text(
+              negativeButton,
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width * 0.035,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.check_circle, size: 18),
+            label: Text(
+              positiveButton,
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width * 0.035,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.successColor,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppStyles.spacingL,
+                vertical: AppStyles.spacingM,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppStyles.radiusM),
+              ),
             ),
-            child: Text(positiveButton,style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.03)),
           ),
         ],
       ),
@@ -1532,7 +1773,9 @@ class _AIInputScreenState extends State<AIInputScreen>
         final matched = item["matched"];
 
         if (matched && product != null) {
-          orderItems.add(OrderItem.fromProduct(product, quantity));
+          // Convert quantity to double to handle both int and double types
+          final quantityValue = quantity is int ? quantity.toDouble() : (quantity as double);
+          orderItems.add(OrderItem.fromProduct(product, quantityValue));
         }
       }
 

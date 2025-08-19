@@ -307,18 +307,32 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
             );
           }
           
-          // Handle post-creation navigation
-          if (!_isEditMode) {
-            if (widget.returnToHome) {
-              // From OrderListScreen -> redirect to Home tab "Tạo đơn hàng"
-              _navigateToCreateOrderTab();
-            } else {
-              // From HomeScreen -> show dialog with options
-              _showSuccessDialog();
-            }
-          } else {
-            _resetForm();
-          }
+                     // Handle post-creation navigation
+           if (!_isEditMode) {
+             if (widget.returnToHome) {
+               // From OrderListScreen -> redirect to Home tab "Tạo đơn hàng"
+               _navigateToCreateOrderTab();
+             } else {
+               // From HomeScreen -> reset form for new order
+               _resetForm();
+               // Show simple success message
+               ScaffoldMessenger.of(context).showSnackBar(
+                 const SnackBar(
+                   content: Row(
+                     children: [
+                       Icon(Icons.check_circle, color: Colors.white),
+                       SizedBox(width: 8),
+                       Text('Đã tạo đơn hàng thành công! Sẵn sàng tạo đơn mới.'),
+                     ],
+                   ),
+                   backgroundColor: AppColors.successColor,
+                   duration: Duration(seconds: 2),
+                 ),
+               );
+             }
+           } else {
+             _resetForm();
+           }
         }
       } else {
         if (mounted) {
@@ -371,173 +385,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     );
   } 
   
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppStyles.radiusXL),
-        ),
-        title: Row( 
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppStyles.spacingM),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.successColor,
-                    AppColors.successColor.withOpacity(0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.successColor.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.check_circle,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: AppStyles.spacingM),
-            const Expanded(
-              child: Text(
-                'Đơn hàng đã tạo!',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
-                  color: AppColors.successColor,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppStyles.spacingL),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.successColor.withOpacity(0.1),
-                    AppColors.successColor.withOpacity(0.05),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(AppStyles.radiusL),
-                border: Border.all(color: AppColors.successColor.withOpacity(0.2)),
-              ),
-              child: Row(
-                children: [
-                  const Text('🎉', style: TextStyle(fontSize: 24)),
-                  const SizedBox(width: AppStyles.spacingM),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Thành công!',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.successColor,
-                          ),
-                        ),
-                        SizedBox(height: AppStyles.spacingXS),
-                        Text(
-                          'Đơn hàng đã được tạo và lưu vào hệ thống.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppStyles.spacingL),
-            const Text(
-              'Bạn muốn làm gì tiếp theo?',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              _resetForm(); // Reset form for new order
-            },
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Tạo đơn mới'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.mainColor,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppStyles.spacingM,
-                vertical: AppStyles.spacingS,
-              ),
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const OrderListScreen(),
-                ),
-              ).then((_) {
-                // Reload data when returning
-                _loadCustomers();
-                _loadProducts();
-              });
-            },
-            icon: const Icon(Icons.list, size: 18),
-            label: const Text('Xem danh sách'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.infoColor,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppStyles.spacingM,
-                vertical: AppStyles.spacingS,
-              ),
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Return to previous screen
-            },
-            icon: const Icon(Icons.arrow_back, size: 18),
-            label: const Text('Quay lại'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.successColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppStyles.spacingL,
-                vertical: AppStyles.spacingM,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppStyles.radiusM),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _addProduct() {
     if (_availableProducts.isEmpty) {
