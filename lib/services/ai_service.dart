@@ -198,7 +198,8 @@ class AIService {
       final List<Map<String, dynamic>> processedItems = [];
       for (final item in data["items"]) {
         final productName = item["product_name"];
-        final quantity = item["quantity"];
+        final quantityRaw = item["quantity"];
+        final quantity = quantityRaw is int ? quantityRaw.toDouble() : (quantityRaw as double? ?? 0.0);
         final unit = item["unit"] ?? "Cái";
         final matched = item["matched"] ?? false;
         
@@ -362,7 +363,8 @@ class AIService {
       
       for (final item in matchedItems) {
         final product = item["product"] as Product?; 
-        final quantity = item["quantity"] as double? ?? 0;
+        final quantityRaw = item["quantity"];
+        final quantity = quantityRaw is int ? quantityRaw.toDouble() : (quantityRaw as double? ?? 0.0);
         
         if (product == null || quantity <= 0) {
           continue; // Bỏ qua item không hợp lệ
@@ -376,16 +378,16 @@ class AIService {
             "message": "❌ Sản phẩm '${product.name}' không đủ tồn kho. Có sẵn: ${product.stockQuantity}, yêu cầu: $quantity",
             "product": product.name,
             "available": product.stockQuantity,
-            "requested": quantity,
+            "requested": quantity, 
           };
         }
         
         final itemTotal = quantity * product.sellingPrice;
         totalAmount += itemTotal;
         
-        orderItems.add(OrderItem(
+        orderItems.add(OrderItem( 
           id: '${DateTime.now().millisecondsSinceEpoch}_${product.id}',
-          productId: product.id,
+          productId: product.id, 
           productName: product.name,
           productCode: product.code,
           quantity: quantity,
@@ -466,10 +468,11 @@ class AIService {
        
       for (final item in matchedItems) {
         final product = item["product"] as Product?;
-        final quantity = item["quantity"] as int? ?? 0;
+        final quantityRaw = item["quantity"];
+        final quantity = quantityRaw is int ? quantityRaw.toDouble() : (quantityRaw as double? ?? 0.0);
         
         if (product == null || quantity <= 0) {
-          continue; // Bỏ qua item không hợp lệ
+          continue; // Bỏ qua item không hợp lệ 
         }
         
         // Kiểm tra tồn kho
@@ -644,7 +647,8 @@ $itemsPreview${unmatchedPreview}
       
       for (final item in items) {
         final product = item["product"] as Product?;
-        final quantity = item["quantity"] as double? ?? 0;
+        final quantityRaw = item["quantity"];
+        final quantity = quantityRaw is int ? quantityRaw.toDouble() : (quantityRaw as double? ?? 0.0);
         
         if (product == null || quantity <= 0) {
           continue; // Bỏ qua item không hợp lệ

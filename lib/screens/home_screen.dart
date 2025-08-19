@@ -518,7 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: _buildPeriodChip(
                     'Tháng',
-                    'month',
+                    'month', 
                     Icons.calendar_view_month,
                   ),
                 ),
