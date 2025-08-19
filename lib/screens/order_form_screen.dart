@@ -1256,11 +1256,13 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                                children: [
                                  Text(
                                    'Sản phẩm trong đơn',
-                                   style: AppStyles.headingSmall,
+                                   style: AppStyles.headingSmall.copyWith(
+                                     fontSize: MediaQuery.of(context).size.width * 0.04,
+                                   ),
                                  ),
                                  // Hiển thị thông tin real-time
                                  if (_items.isNotEmpty)
-                                   Text(
+                                 Text(
                                      '${_items.length} sản phẩm • ${_items.fold(0.0, (sum, item) => sum + item.quantity).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')} đơn vị • ${FormatUtils.formatCurrency(_subtotal)} VNĐ',
                                      style: AppStyles.bodySmall.copyWith(
                                        color: AppColors.textSecondary,
@@ -1276,8 +1278,9 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                              style: ElevatedButton.styleFrom(
                                backgroundColor: AppColors.mainColor,
                                foregroundColor: AppColors.textOnMain,
+
                                padding: const EdgeInsets.symmetric(
-                                 horizontal: AppStyles.spacingM,
+                                 horizontal: AppStyles.spacingS,
                                  vertical: AppStyles.spacingS,
                                ),
                              ),
@@ -1681,11 +1684,11 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
               ),
             ),
 
-            SizedBox(height: AppStyles.spacingM),
+            SizedBox(height: AppStyles.spacingS),
 
             Divider(height: 1, color: AppColors.borderLight),
 
-            SizedBox(height: AppStyles.spacingM),
+            SizedBox(height: AppStyles.spacingS),
 
             // Product list
             // --- Product list (no avatar, clearer separation) ---
