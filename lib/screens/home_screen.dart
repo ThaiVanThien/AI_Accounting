@@ -1139,6 +1139,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: AppStyles.bodySmall.copyWith(
                 color: color,
                 fontWeight: FontWeight.w500,
+                fontSize: MediaQuery.of(context).size.width * 0.03,
               ),
             ),
           ),
@@ -1147,7 +1148,7 @@ class _HomeScreenState extends State<HomeScreen> {
             value,
             style: AppStyles.headingLarge.copyWith(
               color: AppColors.textPrimary,
-              fontSize: 32,
+              fontSize: MediaQuery.of(context).size.width * 0.06,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1320,6 +1321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Đơn hàng gần đây',
                 style: AppStyles.headingSmall.copyWith(
                   fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.of(context).size.width * 0.04,
                 ),
               ),
             ),
@@ -1347,6 +1349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: AppStyles.bodyMedium.copyWith(
                         color: AppColors.successColor,
                         fontWeight: FontWeight.w600,
+                          fontSize: MediaQuery.of(context).size.width * 0.035
                       ),
                     ),
                     const SizedBox(width: AppStyles.spacingXS),
@@ -1410,6 +1413,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           order.orderNumber,
                           style: AppStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: MediaQuery.of(context).size.width * 0.03,
                           ),
                         ),
                         const SizedBox(height: AppStyles.spacingXS),
@@ -1425,6 +1429,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               order.customer.displayName,
                               style: AppStyles.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
+                                  fontSize: MediaQuery.of(context).size.width * 0.03
                               ),
                             ),
                           ],
@@ -1451,6 +1456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: AppStyles.bodyMedium.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.successColor,
+                            fontSize: MediaQuery.of(context).size.width * 0.03
                           ),
                         ),
                       ),
@@ -1459,6 +1465,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         DateFormat('dd/MM/yyyy').format(order.orderDate),
                         style: AppStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
+                            fontSize: MediaQuery.of(context).size.width * 0.03
                         ),
                       ),
                     ],
@@ -1509,6 +1516,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Gợi ý kinh doanh',
                 style: AppStyles.headingSmall.copyWith(
                   fontWeight: FontWeight.bold,
+                    fontSize: MediaQuery.of(context).size.width * 0.04
                 ),
               ),
             ),
@@ -1636,6 +1644,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
                       height: 1.4,
+                        fontSize: MediaQuery.of(context).size.width * 0.03
                     ),
                   ),
                 ),
@@ -1658,6 +1667,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: AppStyles.bodyMedium.copyWith(
                             color: color,
                             fontWeight: FontWeight.w600,
+                              fontSize: MediaQuery.of(context).size.width * 0.03
                           ),
                         ),
                         const SizedBox(width: AppStyles.spacingXS),

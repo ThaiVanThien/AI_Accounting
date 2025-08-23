@@ -313,6 +313,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             style: AppStyles.bodySmall.copyWith(
               color: color,
               fontWeight: FontWeight.w600,
+              fontSize: MediaQuery.of(context).size.width * 0.025
             ),
           ),
           const SizedBox(height: AppStyles.spacingXS),
@@ -321,6 +322,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             style: AppStyles.bodyLarge.copyWith(
               color: color,
               fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.of(context).size.width * 0.03
             ),
           ),
         ],

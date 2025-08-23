@@ -1508,7 +1508,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
               ],
             ),
 
-            SizedBox(height: AppStyles.spacingS),
+            SizedBox(height: AppStyles.spacingXS),
 
             // Search
             TextField(
@@ -1625,7 +1625,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
                               ],
                             ),
 
-                            SizedBox(height: AppStyles.spacingS),
+                            SizedBox(height: AppStyles.spacingXS),
 
                             // Stock line
                             Text(
@@ -1644,7 +1644,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
             ),
 
 
-            SizedBox(height: AppStyles.spacingM),
+            SizedBox(height: AppStyles.spacingS),
 
             // Quantity row
             Row(
@@ -1680,7 +1680,7 @@ class _ProductSelectionDialogState extends State<_ProductSelectionDialog> {
               ],
             ),
 
-            SizedBox(height: AppStyles.spacingL),
+            SizedBox(height: AppStyles.spacingS),
 
             // Actions
             Row(

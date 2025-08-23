@@ -394,7 +394,7 @@ class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
                     children: [
                       Text(
                         _getReportTitle(),
-                        style: AppStyles.headingMedium,
+                        style: AppStyles.headingMedium.copyWith(fontSize: MediaQuery.of(context).size.width*0.05),
                       ),
                       const SizedBox(height: AppStyles.spacingXS),
                       Text(
