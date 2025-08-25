@@ -1254,14 +1254,27 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                               controller: _discountController,
                               keyboardType: TextInputType.number,
                               inputFormatters: [CurrencyInputFormatter()],
-                              decoration: const InputDecoration(
+                              style: TextStyle(
+                                fontSize: MediaQuery.of(context).size.width * 0.04,
+                              ),
+                              decoration: InputDecoration(
                                 labelText: 'Giảm giá',
-                                prefixIcon: Icon(Icons.discount),
+                                labelStyle: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.035,
+                                ),
+                                hintStyle: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.035,
+                                ),
+                                prefixIcon: const Icon(Icons.discount, size: 20),
                                 suffixText: 'VNĐ',
-                                border: OutlineInputBorder(),
+                                suffixStyle: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.035,
+                                ),
+                                border: const OutlineInputBorder(),
                               ),
                               onChanged: (value) => setState(() {}),
-                            ),
+                            )
+
                           ),
                         ],
                       ),
@@ -1273,14 +1286,26 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                               controller: _taxController,
                               keyboardType: TextInputType.number,
                               inputFormatters: [CurrencyInputFormatter()],
-                              decoration: const InputDecoration(
+                              style: TextStyle(
+                                fontSize: MediaQuery.of(context).size.width * 0.04, // chữ người dùng nhập
+                              ),
+                              decoration: InputDecoration(
                                 labelText: 'Thuế',
-                                prefixIcon: Icon(Icons.receipt),
+                                labelStyle: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.035, // label
+                                ),
+                                hintStyle: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.035, // hint nếu có
+                                ),
+                                prefixIcon: const Icon(Icons.receipt, size: 20),
                                 suffixText: 'VNĐ',
-                                border: OutlineInputBorder(),
+                                suffixStyle: TextStyle(
+                                  fontSize: MediaQuery.of(context).size.width * 0.035, // chữ VNĐ
+                                ),
+                                border: const OutlineInputBorder(),
                               ),
                               onChanged: (value) => setState(() {}),
-                            ),
+                            )
                           ),
                         ],
                       ),

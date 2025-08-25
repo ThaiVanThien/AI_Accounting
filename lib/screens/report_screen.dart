@@ -606,29 +606,35 @@ class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppStyles.radiusS),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: MediaQuery.of(context).size.width * 0.04),
               ),
               const SizedBox(width: AppStyles.spacingS),
               Expanded(
                 child: Text(
                   title,
-                  style: AppStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                  style: AppStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600,fontSize: MediaQuery.of(context).size.width * 0.035),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppStyles.spacingM),
-          Text(
-            FormatUtils.formatCurrency(value),
-            style: AppStyles.headingSmall.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Text(
+                FormatUtils.formatCurrency(value),
+                style: AppStyles.headingSmall.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: AppStyles.spacingXS),
+              Text(
+                unit,
+                style: AppStyles.bodySmall.copyWith(color: color),
+              ),
+            ],
           ),
-          Text(
-            unit,
-            style: AppStyles.bodySmall.copyWith(color: color),
-          ),
+
         ],
       ),
     );
@@ -650,7 +656,7 @@ class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppStyles.radiusM),
             ),
-            child: Icon(icon, color: color, size: 32),
+            child: Icon(icon, color: color, size: MediaQuery.of(context).size.width * 0.06,),
           ),
           const SizedBox(width: AppStyles.spacingM),
           Expanded(
@@ -659,7 +665,9 @@ class _ReportScreenState extends State<ReportScreen> with CommonScreenMixin {
               children: [
                 Text(
                   isProfit ? 'Lợi Nhuận' : 'Thua Lỗ',
-                  style: AppStyles.headingSmall,
+                  style: AppStyles.headingSmall.copyWith(
+
+                  ),
                 ),
                 const SizedBox(height: AppStyles.spacingXS),
                                     Text(

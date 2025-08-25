@@ -1638,8 +1638,8 @@ class _AIInputScreenState extends State<AIInputScreen>
             children: [
               Text(
                 content,
-                style: const TextStyle(
-                  fontSize: 14,
+                style:  TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.032,
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -1655,7 +1655,7 @@ class _AIInputScreenState extends State<AIInputScreen>
                 ),
                 child:  Text(
                   '⚠️ Vui lòng kiểm tra kỹ thông tin trước khi xác nhận tạo đơn hàng.',
-                  style: TextStyle(color: AppColors.warningColor, fontSize: MediaQuery.of(context).size.width * 0.03),
+                  style: TextStyle(color: AppColors.warningColor, fontSize: MediaQuery.of(context).size.width * 0.028),
                 ),
               ),
             ],
@@ -1673,7 +1673,7 @@ class _AIInputScreenState extends State<AIInputScreen>
             child: Text(
               negativeButton,
               style: TextStyle(
-                fontSize: MediaQuery.of(context).size.width * 0.035,
+                fontSize: MediaQuery.of(context).size.width * 0.03,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
@@ -1685,7 +1685,7 @@ class _AIInputScreenState extends State<AIInputScreen>
             label: Text(
               positiveButton,
               style: TextStyle(
-                fontSize: MediaQuery.of(context).size.width * 0.035,
+                fontSize: MediaQuery.of(context).size.width * 0.03,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1693,8 +1693,8 @@ class _AIInputScreenState extends State<AIInputScreen>
               backgroundColor: AppColors.successColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(
-                horizontal: AppStyles.spacingL,
-                vertical: AppStyles.spacingM,
+                horizontal: AppStyles.spacingXS,
+                vertical: AppStyles.spacingXS,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppStyles.radiusM),

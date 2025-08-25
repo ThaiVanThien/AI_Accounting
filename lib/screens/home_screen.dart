@@ -510,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: AppColors.backgroundLight,
-              borderRadius: BorderRadius.circular(AppStyles.radiusL),
+              borderRadius: BorderRadius.circular(AppStyles.radiusS),
             ),
             child: Row(
               children: [
@@ -1042,7 +1042,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.all(AppStyles.spacingS),
               decoration: BoxDecoration(
-                color: AppColors.infoColor.withOpacity(0.1),
+                color: AppColors.infoColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppStyles.radiusM),
               ),
               child: Icon(
